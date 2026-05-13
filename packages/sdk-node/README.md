@@ -9,7 +9,7 @@ import { SmartLoop } from "@smartloop/sdk"
 
 const sl = new SmartLoop({
   apiKey: process.env.SMARTLOOP_API_KEY!,
-  product: "crm-claw",
+  product: "my-agent",
   endpoint: "http://localhost:8080",
 })
 

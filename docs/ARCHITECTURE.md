@@ -10,7 +10,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                被监控的 AI 产品                              │
-│   CRM Claw │ AI 机器人 │ AI 翻译 │ 未来 Voice │ 其他       │
+│   my-agent · support-bot · translator · voice-bot · ...                  │
 └──────────┬──────────────────────────────────────────────────┘
            │ HTTPS POST (X-SmartLoop-Key)
            │ via @smartloop/sdk
@@ -128,9 +128,9 @@
   - Schema-first(配 Zod 体验非常好)
   - 性能比 Express 高 2-3x
   - 跟 Drizzle / Bun 生态契合
-- **没选 Hyperf**(SS 主栈):
+- **没选 Hyperf**:
   - SmartLoop 是新仓库,不想绑死 PHP 生态
-  - 团队后续可能要做 AI 工程类工作,JS 生态更顺
+  - the team may need to do AI 工程类工作,JS 生态更顺
 - **没选 Express**:
   - 太老,不如 Fastify
 
@@ -168,8 +168,8 @@
 
 ### 4.6 Admin 鉴权用 token 不是 OAuth?
 
-- MVP 不做用户系统,**全公司一个 token 共用**
-- 后续接入 SaleSmartly 内部 SSO(后端复用现有 OAuth2 流程)
+- MVP 不做用户系统,**single shared token for whole org**
+- 后续接入 your org SSO(后端复用现有 OAuth2 流程)
 - Token 用 `crypto.timingSafeEqual` 常数时间比对,防 timing attack
 
 ### 4.7 Web 用 Next.js Server Components,不是纯 SPA?
@@ -252,5 +252,5 @@ Judge worker 每 5s 拉一批 → SELECT FOR UPDATE SKIP LOCKED(防并发抢)
 详见 [ROADMAP.md](./ROADMAP.md),核心方向:
 
 - **M1-3**:SS 内部全 AI 产品接入
-- **M4-6**:SS Enterprise 套餐差异化功能(对外客户也能用)
+- **M4-6**:Enterprise 套餐差异化功能(对外客户也能用)
 - **M7-12**:独立品牌 / spin out,对标 LangSmith 中文跨境版

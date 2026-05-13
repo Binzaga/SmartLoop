@@ -235,12 +235,12 @@ systemctl status smartloop-api
 ```bash
 # 1. 让运维在阿里云 SG 开 443
 # 2. 拿一个子域名 A 记录指到 47.82.1.197
-#    (例: smartloop.salesmartly.com)
+#    (例: smartloop.example.com)
 # 3. 装 certbot
 dnf install -y certbot python3-certbot-nginx
 
 # 4. 拿证书 + 自动改 nginx
-certbot --nginx -d smartloop.salesmartly.com
+certbot --nginx -d smartloop.example.com
 
 # 5. 自动续期 cron 已经被 certbot 装好,但建议手动验证一次:
 certbot renew --dry-run
@@ -258,7 +258,7 @@ certbot renew --dry-run
 */5 * * * * curl -sf http://47.82.1.197/healthz > /dev/null || echo "smartloop down" | mail -s "ALERT" oncall@xxx
 ```
 
-完整方案:接入 SaleSmartly 现有的监控(Grafana / Prometheus)。
+完整方案:接入 your existing monitoring(Grafana / Prometheus)。
 
 ---
 
@@ -300,7 +300,7 @@ cd /home/jump/smartloop
 - [ ] 给 Postgres 开非默认密码
 - [ ] 把 admin 接口从 token 升级到 SSO
 - [ ] 用 systemd 跑(替代当前 setsid + disown)
-- [ ] 日志接入 SS 主日志系统
+- [ ] 日志接入 your main log system
 - [ ] 设置告警(API 5xx > N、judge worker 落后、磁盘满)
 - [ ] 备份 cron(日 backup + 7 天保留)
 - [ ] Web 用 `next build + next start`,不是 `dev`

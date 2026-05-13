@@ -14,7 +14,7 @@ if (!API_KEY) {
 
 const sl = new SmartLoop({
   apiKey: API_KEY,
-  product: "crm-claw",
+  product: "my-agent",
   endpoint: ENDPOINT,
   flushIntervalMs: 1000,
   onError: (err, ctx) => console.error("[sdk error]", ctx.phase, err.message),

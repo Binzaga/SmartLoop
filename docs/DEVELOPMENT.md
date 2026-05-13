@@ -61,7 +61,7 @@ API_PORT=8088
 API_HOST=127.0.0.1
 LOG_LEVEL=info
 ADMIN_TOKEN=<生成一个 32 字符随机串>
-DASHSCOPE_API_KEY=<向 leader 索取或自己申请>
+DASHSCOPE_API_KEY=<Get one from https://dashscope.aliyuncs.com/ or use any OpenAI-compatible LLM>
 JUDGE_MODEL=qwen3-max
 PRIMARY_MODEL=qwen3.5-plus
 ```
@@ -146,17 +146,17 @@ ADMIN=<你的 ADMIN_TOKEN>
 curl -X POST http://localhost:8088/admin/orgs \
   -H "x-admin-token: $ADMIN" \
   -H 'content-type: application/json' \
-  -d '{"id":"salesmartly","name":"SaleSmartly"}'
+  -d '{"id":"acme","name":"Example"}'
 
 # 2. 创建 product(把返回的 apiKey 记下来,只显示一次!)
 curl -X POST http://localhost:8088/admin/products \
   -H "x-admin-token: $ADMIN" \
   -H 'content-type: application/json' \
   -d '{
-    "id":"crm-claw",
-    "orgId":"salesmartly",
-    "name":"CRM Claw",
-    "ownerTeam":"CRM Claw 团队"
+    "id":"my-agent",
+    "orgId":"acme",
+    "name":"My Agent",
+    "ownerTeam":"Platform Team"
   }'
 # 返回 {"ok":true,"product":{...},"apiKey":"sl_xxxxx","warning":"..."}
 ```
@@ -193,7 +193,7 @@ import { SmartLoop } from "@smartloop/sdk"
 
 const sl = new SmartLoop({
   apiKey: process.env.SMARTLOOP_API_KEY!,
-  product: "crm-claw",
+  product: "my-agent",
   endpoint: process.env.SMARTLOOP_ENDPOINT ?? "http://localhost:8088",
 })
 

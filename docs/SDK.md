@@ -31,7 +31,7 @@ import { SmartLoop } from "@smartloop/sdk"
 
 const sl = new SmartLoop({
   apiKey: process.env.SMARTLOOP_API_KEY!,
-  product: "crm-claw",
+  product: "my-agent",
   endpoint: process.env.SMARTLOOP_ENDPOINT ?? "http://localhost:8088",
 })
 
@@ -176,7 +176,7 @@ SDK 字段 ↔ 后端 `events` 表:
 
 - ✅ Node.js / TypeScript(当前)
 - 🚧 Python(下一个,给 algo 团队)
-- 📋 PHP(给 SS 主站 Hyperf)
+- 📋 PHP (for any Hyperf-based stack)
 - 📋 Go
 - 📋 浏览器 SDK(给前端直接埋 👍/👎)
 

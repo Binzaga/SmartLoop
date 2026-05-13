@@ -33,7 +33,7 @@
 1. **DingTalk app `clientSecret`** (用于钉钉机器人项目,SmartLoop 不直接使用)
 2. **DashScope API key `sk-c1916cb6...`** ⬅️ 当前 SmartLoop 在用
 3. **Admin token `UjKguDXXNF6...`** ⬅️ 当前 SmartLoop 在用
-4. **CRM Claw SDK key `sl_VIaDgjGQv6sbL...`** ⬅️ 当前在用
+4. **A product SDK key `sl_VIaDgjGQv6sbL...`** ⬅️ in use
 5. **GitHub PAT `github_pat_11AG2J5...`** ⬅️ 当前在用
 
 **生产前必须全部轮换。** 详见下面的「轮换步骤」。
@@ -69,7 +69,7 @@
    ```
 2. 改 `apps/api/.env` 的 `ADMIN_TOKEN`
 3. 改 `apps/web/.env.local` 的 `SMARTLOOP_ADMIN_TOKEN`(必须一致)
-4. 重启 api + web
+4. restart api + web
 5. 通知所有用过老 token 的工具更新
 
 ### 4.3 Per-product API key(SDK key)
@@ -134,7 +134,7 @@ curl -X POST http://47.82.1.197/admin/products/<product-id>/rotate-key \
 | 现状 | 改进 |
 |---|---|
 | Secret 在 `.env` 明文 | 接入 **HashiCorp Vault** / 阿里云 KMS,运行时拉取 |
-| `ADMIN_TOKEN` 全公司一个 | 接入 SaleSmartly 内部 **SSO**,每人各自鉴权 |
+| `ADMIN_TOKEN` 全公司一个 | 接入 your org **SSO**,每人各自鉴权 |
 | PAT 在文件 | 改成 **deploy key**(SSH 密钥对),更安全 |
 | 无审计 | 加 `/admin/*` 访问日志(谁、什么时间、什么操作) |
 | 手动轮换 | 90 天过期自动告警 + 自动轮换流程 |

@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SmartLoop · AI Product Quality Platform",
-  description: "SaleSmartly 内部 AI 产品质量监控平台",
+  title: "SmartLoop — Open-source quality observation for AI products",
+  description:
+    "Sentry for AI agents. Bad-case clustering, regression testing, and live alerts. MIT-licensed, self-hostable.",
 };
 
 export default function RootLayout({

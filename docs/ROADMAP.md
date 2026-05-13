@@ -64,7 +64,7 @@
 ## 📋 待办 (路演前必做,Day 6 - 2026-06-07)
 
 ### 数据
-- 📋 灌入真实 CRM Claw 历史数据(至少 200 条事件 + 30 条反馈,脱敏)
+- 📋 Seed realistic event data for demo (>= 200 events + 30 feedback entries)
 - 📋 创建第 2、3 个产品(AI 机器人、AI 翻译)+ 对应模拟数据
 
 ### 演示流畅度
@@ -83,7 +83,7 @@
 
 ### 多语言 SDK
 - 📋 Python SDK(算法团队接入用)
-- 📋 PHP SDK(SS 主站 Hyperf 用)
+- 📋 PHP SDK(your main app Hyperf 用)
 
 ### 评测能力升级
 - 📋 Judge 校准集(50 条人工标注样本,周度校准)
@@ -118,15 +118,15 @@
 ### 多产品扩展
 - 📋 接入 AI 机器人
 - 📋 接入 AI 翻译
-- 📋 接入 Quality Loop(SS 现有的客户反馈系统)
+- 📋 接入 Quality Loop(your existing customer feedback system)
 - 📋 跨产品共享 dashboard
 
 ---
 
-## 📋 待办(M4-M6,SS Enterprise 化)
+## 📋 待办(M4-M6,Enterprise 化)
 
 - 📋 用户级权限(替代全局 token)
-- 📋 接入 SaleSmartly SSO
+- 📋 integrate with your SSO
 - 📋 多租户硬隔离(分库 / 分 schema)
 - 📋 套餐计费:按 event 上报量分级
 - 📋 客户自助:商户可以看到自己 AI 客服的健康分
@@ -143,7 +143,7 @@
 - 💭 自托管开源版本(吸引 dev 用户)
 
 ### 通用质量观测
-- 💭 不只 AI 产品,SaleSmartly 整体业务的质量监控(API 5xx、转化率异常、客户卡顿率)
+- 💭 不只 AI 产品,your overall business的质量监控(API 5xx、转化率异常、客户卡顿率)
 
 ### 智能 Agent 工程平台
 - 💭 「为 Agent 工程量身打造的 Sentry」

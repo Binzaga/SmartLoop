@@ -41,7 +41,7 @@ export const orgs = pgTable("orgs", {
 export const products = pgTable(
   "products",
   {
-    id: text("id").primaryKey(), // 'crm-claw', 'ai-bot', etc.
+    id: text("id").primaryKey(), // e.g. 'my-agent', 'support-bot', 'translator'
     orgId: text("org_id")
       .notNull()
       .references(() => orgs.id),

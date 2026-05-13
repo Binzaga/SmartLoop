@@ -58,7 +58,7 @@
 ### `POST /admin/orgs`
 创建 org。
 ```json
-{ "id": "salesmartly", "name": "SaleSmartly 主账号" }
+{ "id": "acme", "name": "Acme" }
 ```
 
 ### `GET /admin/products`
@@ -70,11 +70,11 @@
 Request:
 ```json
 {
-  "id": "crm-claw",
-  "orgId": "salesmartly",
-  "name": "CRM Claw",
+  "id": "my-agent",
+  "orgId": "acme",
+  "name": "My Agent",
   "description": "AI Copilot",
-  "ownerTeam": "CRM Claw 团队"
+  "ownerTeam": "Platform Team"
 }
 ```
 
@@ -84,7 +84,7 @@ Response:
 ```json
 {
   "ok": true,
-  "product": {"id":"crm-claw","orgId":"salesmartly","name":"CRM Claw"},
+  "product": {"id":"my-agent","orgId":"acme","name":"My Agent"},
   "apiKey": "sl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   "warning": "Save this key now — it will not be shown again."
 }
@@ -134,9 +134,9 @@ Response:
 {
   "products": [
     {
-      "productId": "crm-claw",
-      "name": "CRM Claw",
-      "ownerTeam": "CRM Claw 团队",
+      "productId": "my-agent",
+      "name": "My Agent",
+      "ownerTeam": "Platform Team",
       "eventCount24h": 12,
       "eventCount7d": 88,
       "avgOverall": 3.67,
@@ -149,7 +149,7 @@ Response:
   "recentEvents": [
     {
       "id": "uuid",
-      "productId": "crm-claw",
+      "productId": "my-agent",
       "inputMessage": "...",
       "outputMessage": "...",
       "model": "qwen3.5-plus",

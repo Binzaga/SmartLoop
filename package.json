@@ -2,7 +2,7 @@
   "name": "smartloop",
   "version": "0.1.0",
   "private": true,
-  "description": "SaleSmartly AI Product Quality Monitoring & Iteration Platform",
+  "description": "Open-source quality observation platform for AI products",
   "workspaces": [
     "apps/*",
     "packages/*"
