@@ -6,83 +6,101 @@ import {
   IconArrowRight,
   IconBolt,
   IconBrain,
-  IconChart,
   IconCheck,
-  IconClock,
-  IconHeart,
+  IconChart,
   IconRobot,
   IconShield,
   IconSparkle,
-  IconThumbsDown,
 } from "@/components/icons"
+import { getStrings, type Locale, type Strings } from "@/lib/i18n"
+
+export const dynamic = "force-dynamic"
 
 // ============================================================================
-// Marketing landing — patterns borrowed from LangSmith / Braintrust / Helicone
+// Marketing landing — supports ?lang=en | zh
 // ============================================================================
 
-export default function Landing() {
+export default async function Landing(props: {
+  searchParams: Promise<{ lang?: string }>
+}) {
+  const sp = await props.searchParams
+  const locale: Locale = sp.lang === "zh" ? "zh" : "en"
+  const t = getStrings(locale)
   return (
     <>
-      <MarketingNav />
+      <MarketingNav t={t} locale={locale} />
       <main className="overflow-x-hidden">
-        <Hero />
-        <SocialProofStrip />
-        <CodeIntegrationSection />
-        <FeatureGrid />
-        <HowItWorks />
-        <ComparisonSection />
-        <OpenSourceSection />
-        <CTASection />
+        <Hero t={t} locale={locale} />
+        <SocialProofStrip t={t} />
+        <CodeIntegrationSection t={t} />
+        <FeatureGrid t={t} />
+        <HowItWorks t={t} />
+        <ComparisonSection t={t} locale={locale} />
+        <OpenSourceSection t={t} />
+        <CTASection t={t} locale={locale} />
       </main>
-      <MarketingFooter />
+      <MarketingFooter t={t} locale={locale} />
     </>
   )
 }
 
 // ============================================================================
-// Top nav (marketing)
+// Top nav
 // ============================================================================
 
-function MarketingNav() {
+function MarketingNav({ t, locale }: { t: Strings; locale: Locale }) {
+  const otherLocale: Locale = locale === "en" ? "zh" : "en"
+  const otherLabel = otherLocale === "zh" ? "中" : "EN"
+
   return (
     <header className="sl-glass sticky top-0 z-30 border-b border-border-soft">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href={withLang("/", locale)} className="flex items-center gap-2.5">
           <BrandMark size={28} />
           <span className="text-[17px] font-semibold tracking-tight">SmartLoop</span>
         </Link>
+
         <nav className="hidden items-center gap-7 md:flex">
           <Link href="#features" className="text-sm text-text-secondary hover:text-text-primary">
-            Features
+            {t.navFeatures}
           </Link>
           <Link href="#how" className="text-sm text-text-secondary hover:text-text-primary">
-            How it works
+            {t.navHow}
           </Link>
           <Link href="#compare" className="text-sm text-text-secondary hover:text-text-primary">
-            Compare
+            {t.navCompare}
           </Link>
           <Link
             href="https://github.com/Binzaga/SmartLoop"
             target="_blank"
             className="text-sm text-text-secondary hover:text-text-primary"
           >
-            GitHub
+            {t.navGitHub}
           </Link>
         </nav>
+
         <div className="flex items-center gap-2">
+          {/* Language toggle */}
+          <Link
+            href={withLang(otherLocale === "zh" ? "/?lang=zh" : "/", otherLocale)}
+            className="inline-flex h-7 items-center justify-center rounded-md border border-border-soft bg-bg-elev-1 px-2.5 text-[11px] font-medium text-text-secondary hover:border-border hover:text-text-primary"
+            aria-label="Switch language"
+          >
+            {otherLabel}
+          </Link>
           <Link
             href="https://github.com/Binzaga/SmartLoop"
             target="_blank"
             className="hidden items-center gap-1.5 rounded-lg border border-border-soft bg-bg-elev-1 px-3 py-1.5 text-xs text-text-secondary hover:border-border md:inline-flex"
           >
             <IconGitHub />
-            Star
+            {t.navStar}
           </Link>
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-accent-from to-accent-to px-3.5 py-1.5 text-xs font-medium text-bg-base"
           >
-            Open Dashboard
+            {t.navOpenDashboard}
             <IconArrowRight size={11} />
           </Link>
         </div>
@@ -91,14 +109,19 @@ function MarketingNav() {
   )
 }
 
+function withLang(path: string, locale: Locale): string {
+  if (locale === "en") return path.split("?")[0]
+  if (path.includes("?")) return path
+  return `${path}?lang=zh`
+}
+
 // ============================================================================
-// Hero — big headline + code snippet preview
+// Hero
 // ============================================================================
 
-function Hero() {
+function Hero({ t, locale }: { t: Strings; locale: Locale }) {
   return (
     <section className="relative">
-      {/* Background grid + glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-50"
@@ -118,28 +141,28 @@ function Hero() {
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </span>
             <span className="text-[11px] uppercase tracking-[0.18em] text-text-secondary">
-              Open-source · MIT · alpha
+              {t.heroBadge}
             </span>
           </div>
 
           <h1
-            className="text-[44px] font-semibold leading-[1.05] tracking-tight sl-fade-in md:text-[68px]"
+            className="text-[44px] font-semibold leading-[1.05] tracking-tight sl-fade-in md:text-[64px]"
             style={{ animationDelay: "100ms" }}
           >
-            让每一个 AI 产品
+            {t.heroTitleA}
             <br />
-            <span className="sl-gradient-text">自己说出</span> 它哪里错了
+            <span className="sl-gradient-text">{t.heroTitleAccent}</span>
+            {locale === "zh" ? " " : " "}
+            {t.heroTitleB}
           </h1>
 
           <p
             className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-text-secondary sl-fade-in md:text-lg"
             style={{ animationDelay: "200ms" }}
           >
-            SmartLoop 是 AI 产品的统一质量平台——
-            <span className="text-text-primary">SDK 一行接入</span>,
-            自动评分、差评归类、回归测试、实时告警。
-            <br className="hidden md:inline" />
-            Sentry for AI agents. Self-hostable. MIT-licensed.
+            {t.heroSubtitle}
+            <span className="text-text-primary">{t.heroSubtitleEmphasis}</span>
+            {t.heroSubtitleSecond}
           </p>
 
           <div
@@ -150,7 +173,7 @@ function Hero() {
               href="/dashboard"
               className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-br from-accent-from to-accent-to px-6 text-sm font-medium text-bg-base shadow-lg shadow-accent-from/25 transition hover:shadow-accent-from/40"
             >
-              Open Dashboard
+              {t.heroCtaPrimary}
               <IconArrowRight size={14} />
             </Link>
             <Link
@@ -159,7 +182,7 @@ function Hero() {
               className="inline-flex h-11 items-center gap-2 rounded-xl border border-border-soft bg-bg-elev-1 px-5 text-sm text-text-secondary hover:border-border hover:text-text-primary"
             >
               <IconGitHub />
-              Star on GitHub
+              {t.heroCtaSecondary}
             </Link>
           </div>
 
@@ -167,23 +190,19 @@ function Hero() {
             className="mt-5 text-[11px] uppercase tracking-widest text-text-tertiary sl-fade-in"
             style={{ animationDelay: "400ms" }}
           >
-            self-host in 5 minutes · 3-line SDK · plug any LLM
+            {t.heroFinePrint}
           </p>
         </div>
 
-        {/* Hero visual: code snippet + score preview */}
-        <div
-          className="mt-16 sl-fade-in"
-          style={{ animationDelay: "500ms" }}
-        >
-          <HeroPreview />
+        <div className="mt-16 sl-fade-in" style={{ animationDelay: "500ms" }}>
+          <HeroPreview t={t} locale={locale} />
         </div>
       </div>
     </section>
   )
 }
 
-function HeroPreview() {
+function HeroPreview({ t, locale }: { t: Strings; locale: Locale }) {
   return (
     <div className="relative mx-auto max-w-5xl">
       <div
@@ -195,14 +214,13 @@ function HeroPreview() {
         }}
       />
       <div className="relative grid grid-cols-1 gap-4 md:grid-cols-5">
-        {/* Code snippet card */}
         <div className="sl-card relative md:col-span-3">
           <div className="border-b border-border-soft px-5 py-2.5">
             <div className="flex items-center gap-2 text-[11px] text-text-tertiary">
               <span className="h-2.5 w-2.5 rounded-full bg-red-500/60" />
               <span className="h-2.5 w-2.5 rounded-full bg-amber-500/60" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/60" />
-              <code className="sl-mono ml-3">crm-agent.ts</code>
+              <code className="sl-mono ml-3">my-agent.ts</code>
             </div>
           </div>
           <pre className="sl-mono overflow-x-auto px-5 py-5 text-[13px] leading-[1.6]">
@@ -223,12 +241,11 @@ function HeroPreview() {
               <span className="text-text-primary">({"{"}</span>
               {"\n  "}
               <span className="text-sky-300">apiKey</span>
-              <span className="text-text-primary">: process.env.</span>
-              <span className="text-text-primary">SMARTLOOP_API_KEY,</span>
+              <span className="text-text-primary">: process.env.SMARTLOOP_API_KEY,</span>
               {"\n  "}
               <span className="text-sky-300">product</span>
               <span className="text-text-primary">: </span>
-              <span className="text-amber-200">"crm-agent"</span>
+              <span className="text-amber-200">"my-agent"</span>
               <span className="text-text-primary">,</span>
               {"\n  "}
               <span className="text-sky-300">endpoint</span>
@@ -237,7 +254,11 @@ function HeroPreview() {
               <span className="text-text-primary">,</span>
               {"\n"}
               <span className="text-text-primary">{"});\n\n"}</span>
-              <span className="text-text-tertiary">{"// after your LLM call"}</span>
+              <span className="text-text-tertiary">
+                {locale === "zh"
+                  ? "// 你的 LLM 调用后"
+                  : "// after your LLM call"}
+              </span>
               {"\n"}
               <span className="text-text-primary">sl.</span>
               <span className="text-emerald-300">log</span>
@@ -265,7 +286,6 @@ function HeroPreview() {
           </pre>
         </div>
 
-        {/* Live event preview card */}
         <div className="sl-card md:col-span-2">
           <div className="border-b border-border-soft px-5 py-2.5">
             <div className="flex items-center justify-between text-[11px] text-text-tertiary">
@@ -274,9 +294,9 @@ function HeroPreview() {
                   <span className="sl-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-400" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 </span>
-                <span className="uppercase tracking-wider">Live</span>
+                <span className="uppercase tracking-wider">{t.liveLabel}</span>
               </span>
-              <code className="sl-mono">smartloop.events</code>
+              <code className="sl-mono">{t.livePreviewEvents}</code>
             </div>
           </div>
           <div className="space-y-3 px-5 py-5">
@@ -284,25 +304,41 @@ function HeroPreview() {
               tone="bad"
               tags={["hallucination"]}
               score={2}
-              line='"昨天哪些会话没回复？" → AI 编造了具体客户名…'
+              line={
+                locale === "zh"
+                  ? '"昨天有哪些未回复？" → AI 编造了客户名…'
+                  : '"Which orders shipped late?" → AI invented order IDs…'
+              }
             />
             <PreviewEvent
               tone="good"
               tags={["good"]}
               score={5}
-              line='"Kevin 处理了多少会话？" → 28（来自工具调用）'
+              line={
+                locale === "zh"
+                  ? '"Kevin 今天处理了多少？" → 28（来自工具）'
+                  : '"How many did Kevin handle?" → 28 (from tool call)'
+              }
             />
             <PreviewEvent
               tone="warn"
               tags={["too_short"]}
               score={3}
-              line='"早上好" → "早上好！"'
+              line={
+                locale === "zh"
+                  ? '"早上好" → "早上好！"'
+                  : '"Hi" → "Hello!"'
+              }
             />
             <PreviewEvent
               tone="bad"
               tags={["multilingual_drift"]}
               score={2}
-              line='"تتبع رقم #123" → 回复了中文（应阿拉伯）'
+              line={
+                locale === "zh"
+                  ? '"تتبع رقم #123" → 回复了中文（应阿语）'
+                  : '"تتبع رقم #123" → replied in English (should be ar)'
+              }
             />
           </div>
         </div>
@@ -362,33 +398,25 @@ function PreviewEvent({
 // Social proof strip
 // ============================================================================
 
-function SocialProofStrip() {
+function SocialProofStrip({ t }: { t: Strings }) {
   return (
     <section className="border-y border-border-soft py-8">
       <div className="mx-auto max-w-6xl px-6">
         <p className="mb-5 text-center text-[10px] uppercase tracking-[0.2em] text-text-tertiary">
-          Built for AI teams · Self-hostable · Pluggable LLM backend
+          {t.socialProofEyebrow}
         </p>
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-          <ProofTile icon={<IconBolt size={16} />} title="3-line integration" desc="One import, one constructor, one log() call." />
-          <ProofTile icon={<IconShield size={16} />} title="Self-host or cloud" desc="Run on your own infra with one docker compose up." />
-          <ProofTile icon={<IconBrain size={16} />} title="Pluggable judge model" desc="OpenAI, Anthropic, Qwen, your own — interchange." />
-          <ProofTile icon={<IconAlert size={16} />} title="Alerts that actually fire" desc="DingTalk · Slack · Telegram · 飞书 · webhook." />
+          <ProofTile icon={<IconBolt size={16} />} title={t.socialProof1Title} desc={t.socialProof1Desc} />
+          <ProofTile icon={<IconShield size={16} />} title={t.socialProof2Title} desc={t.socialProof2Desc} />
+          <ProofTile icon={<IconBrain size={16} />} title={t.socialProof3Title} desc={t.socialProof3Desc} />
+          <ProofTile icon={<IconAlert size={16} />} title={t.socialProof4Title} desc={t.socialProof4Desc} />
         </div>
       </div>
     </section>
   )
 }
 
-function ProofTile({
-  icon,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode
-  title: string
-  desc: string
-}) {
+function ProofTile({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   return (
     <div>
       <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-soft bg-bg-elev-1 text-accent-from">
@@ -401,47 +429,47 @@ function ProofTile({
 }
 
 // ============================================================================
-// "Why SmartLoop" — code-snippet-driven feature section
+// Why SmartLoop section
 // ============================================================================
 
-function CodeIntegrationSection() {
+function CodeIntegrationSection({ t }: { t: Strings }) {
   return (
     <section id="features" className="py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-12 text-center">
           <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">
-            Why SmartLoop
+            {t.whyEyebrow}
           </p>
           <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            AI 产品的质量监控,
-            <br className="md:hidden" /> <span className="sl-gradient-text">该被认真对待。</span>
+            {t.whyTitle}
+            <br className="md:hidden" /> <span className="sl-gradient-text">{t.whyTitleAccent}</span>
           </h2>
         </div>
 
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
           <FeatureBlock
-            eyebrow="LLM-as-Judge"
-            title="每条 AI 回答,自动评分。"
-            body="按 accuracy / helpfulness / safety / style 四维打 0-5 分,加可解释的 reasoning。Judge 模型可换(qwen3-max / gpt-4o / claude-sonnet)。"
-            visual={<JudgeVisual />}
+            eyebrow={t.judgeEyebrow}
+            title={t.judgeTitle}
+            body={t.judgeBody}
+            visual={<JudgeVisual reasoningLabel={t.judgeReasoning} t={t} />}
           />
           <FeatureBlock
-            eyebrow="Bad case clustering"
-            title="差评不再石沉大海。"
-            body="低分 + 👎 事件自动归到 5 类 cluster(hallucination / format / latency / multilingual / off-topic)。每个 cluster 有 trend、典型案例、修复建议。"
+            eyebrow={t.clusterEyebrow}
+            title={t.clusterTitle}
+            body={t.clusterBody}
             visual={<ClusterVisual />}
           />
           <FeatureBlock
-            eyebrow="Regression testing"
-            title="Prompt 改动?先跑回归。"
-            body="每个产品维护 golden case 集。一键跑新 prompt,自动对比通过率,确保改动不引入回归。"
-            visual={<RegressionVisual />}
+            eyebrow={t.regressionEyebrow}
+            title={t.regressionTitle}
+            body={t.regressionBody}
+            visual={<RegressionVisual passRateLabel={t.regressionPassRate} testedLabel={t.regressionTestedAgainst} />}
           />
           <FeatureBlock
-            eyebrow="Real-time alerts"
-            title="异常瞬间到达对的人。"
-            body="hallucination 类 cluster 24h 飙升 → 钉钉群弹窗 + 自动根因建议。规则可配,通道可选。"
-            visual={<AlertVisual />}
+            eyebrow={t.alertsEyebrow}
+            title={t.alertsTitle}
+            body={t.alertsBody}
+            visual={<AlertVisual title={t.alertsAlertTitle} />}
           />
         </div>
       </div>
@@ -470,7 +498,7 @@ function FeatureBlock({
   )
 }
 
-function JudgeVisual() {
+function JudgeVisual({ reasoningLabel, t }: { reasoningLabel: string; t: Strings }) {
   return (
     <div className="rounded-xl border border-border-soft bg-bg-elev-2/60 p-4">
       <div className="space-y-2 text-[12px]">
@@ -480,7 +508,12 @@ function JudgeVisual() {
         <ScoreBar label="style" score={3} />
       </div>
       <p className="mt-3 text-[11px] text-text-tertiary">
-        Reasoning: <span className="text-text-secondary">回答数据准确,语气稍冗长,可压到 100 字内</span>
+        {reasoningLabel}{" "}
+        <span className="text-text-secondary">
+          {t.heroFinePrint.includes("分钟")
+            ? "回答数据准确，语气稍冗长。"
+            : "Accurate data, slightly verbose tone — could trim to <100 chars."}
+        </span>
       </p>
     </div>
   )
@@ -531,7 +564,7 @@ function ClusterVisual() {
   )
 }
 
-function RegressionVisual() {
+function RegressionVisual({ passRateLabel, testedLabel }: { passRateLabel: string; testedLabel: string }) {
   return (
     <div className="rounded-xl border border-border-soft bg-bg-elev-2/60 p-4">
       <div className="mb-3 flex items-center justify-between text-[11px] text-text-tertiary">
@@ -545,30 +578,30 @@ function RegressionVisual() {
         <div>
           <p className="text-[10px] uppercase tracking-wider text-text-tertiary">v3.1</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums text-red-400">67%</p>
-          <p className="text-[10px] text-text-tertiary">pass rate</p>
+          <p className="text-[10px] text-text-tertiary">{passRateLabel}</p>
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-wider text-text-tertiary">v3.2</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums text-emerald-400">92%</p>
-          <p className="text-[10px] text-text-tertiary">pass rate</p>
+          <p className="text-[10px] text-text-tertiary">{passRateLabel}</p>
         </div>
       </div>
       <p className="mt-3 text-[11px] text-text-tertiary">
-        Tested against <span className="text-text-secondary">50 golden cases</span> · 4.2s
+        {testedLabel} <span className="text-text-secondary">50 golden cases</span> · 4.2s
       </p>
     </div>
   )
 }
 
-function AlertVisual() {
+function AlertVisual({ title }: { title: string }) {
   return (
     <div className="rounded-xl border border-border-soft bg-bg-elev-2/60 p-4">
       <div className="flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/[0.06] p-3">
         <IconAlert size={14} className="mt-0.5 text-red-400 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-[12px] font-medium text-red-300">Hallucination spike</p>
+          <p className="text-[12px] font-medium text-red-300">{title}</p>
           <p className="mt-0.5 text-[11px] text-text-secondary">
-            crm-agent · 24h: <span className="text-red-300">23</span> (yesterday: 5)
+            my-agent · 24h: <span className="text-red-300">23</span> (yesterday: 5)
           </p>
           <p className="mt-2 text-[10px] text-text-tertiary">
             Suspected: prompt v3.2 removed "only cite context"
@@ -583,47 +616,21 @@ function AlertVisual() {
 // Feature grid
 // ============================================================================
 
-function FeatureGrid() {
+function FeatureGrid({ t }: { t: Strings }) {
   const features = [
-    {
-      icon: <IconBolt size={18} />,
-      title: "3-line SDK",
-      desc: "Async batched. Zero blocking. Node today; Python / PHP / Go next.",
-    },
-    {
-      icon: <IconBrain size={18} />,
-      title: "LLM-as-Judge",
-      desc: "Auto-score every event on 4 dimensions, plus tag classification.",
-    },
-    {
-      icon: <IconChart size={18} />,
-      title: "Bad-case clusters",
-      desc: "Embedding-based DBSCAN clusters surface recurring failure modes.",
-    },
-    {
-      icon: <IconCheck size={18} />,
-      title: "Regression suite",
-      desc: "Golden cases per product. One click runs new prompt, shows diff.",
-    },
-    {
-      icon: <IconAlert size={18} />,
-      title: "Cross-channel alerts",
-      desc: "DingTalk, Slack, Telegram, 飞书, generic webhook — pick yours.",
-    },
-    {
-      icon: <IconActivity size={18} />,
-      title: "Live dashboard",
-      desc: "Cross-product health, recent events, spotlight bad cases.",
-    },
+    { icon: <IconBolt size={18} />, title: t.feature1Title, desc: t.feature1Desc },
+    { icon: <IconBrain size={18} />, title: t.feature2Title, desc: t.feature2Desc },
+    { icon: <IconChart size={18} />, title: t.feature3Title, desc: t.feature3Desc },
+    { icon: <IconCheck size={18} />, title: t.feature4Title, desc: t.feature4Desc },
+    { icon: <IconAlert size={18} />, title: t.feature5Title, desc: t.feature5Desc },
+    { icon: <IconActivity size={18} />, title: t.feature6Title, desc: t.feature6Desc },
   ]
   return (
     <section className="border-t border-border-soft py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-12 text-center">
-          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">Features</p>
-          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            One platform, every quality concern.
-          </h2>
+          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">{t.featuresEyebrow}</p>
+          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">{t.featuresTitle}</h2>
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
@@ -645,33 +652,19 @@ function FeatureGrid() {
 // How it works
 // ============================================================================
 
-function HowItWorks() {
+function HowItWorks({ t }: { t: Strings }) {
   return (
     <section id="how" className="border-t border-border-soft py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-14 text-center">
-          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">How it works</p>
-          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            From event to insight — automatic.
-          </h2>
+          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">{t.howEyebrow}</p>
+          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">{t.howTitle}</h2>
         </div>
 
         <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">
-          <Step
-            n={1}
-            title="Your product emits events"
-            body="One sl.log() call per LLM invocation. Async, batched, never blocks the host."
-          />
-          <Step
-            n={2}
-            title="SmartLoop scores + clusters"
-            body="LLM-as-Judge scores each event; embedding clusters group recurring failures."
-          />
-          <Step
-            n={3}
-            title="Owners see the truth"
-            body="Live dashboard, regression suite, alert when patterns degrade — all in one place."
-          />
+          <Step n={1} title={t.how1Title} body={t.how1Body} />
+          <Step n={2} title={t.how2Title} body={t.how2Body} />
+          <Step n={3} title={t.how3Title} body={t.how3Body} />
         </div>
       </div>
     </section>
@@ -691,28 +684,52 @@ function Step({ n, title, body }: { n: number; title: string; body: string }) {
 }
 
 // ============================================================================
-// Compare with LangSmith / Braintrust / Helicone
+// Compare
 // ============================================================================
 
-function ComparisonSection() {
+function ComparisonSection({ t, locale }: { t: Strings; locale: Locale }) {
+  const rows: Array<{
+    feature: string
+    a: boolean | "partial"
+    b: boolean | "partial"
+    c: boolean | "partial"
+    sl: boolean | "partial"
+    note: string
+  }> = locale === "zh"
+    ? [
+        { feature: "Trace 树（父子层级）", a: true, b: true, c: true, sl: false, note: "orchestration 调试用" },
+        { feature: "差评自动聚类", a: false, b: "partial", c: false, sl: true, note: "重复失败模式" },
+        { feature: "回归测试（golden case）", a: "partial", b: true, c: false, sl: true, note: "prompt 改动 → 通过率 diff" },
+        { feature: "全渠道告警", a: false, b: false, c: "partial", sl: true, note: "钉钉/Slack/Telegram/飞书" },
+        { feature: "核心开源", a: false, b: false, c: true, sl: true, note: "MIT 协议，可自托管" },
+        { feature: "面向产品 owner 而非开发者", a: false, b: false, c: false, sl: true, note: "UI 给 PM / 运营，不只是工程师" },
+        { feature: "多语言质量标记", a: false, b: false, c: false, sl: true, note: "多语言漂移检测" },
+        { feature: "自定义 Judge 模型", a: true, b: true, c: false, sl: true, note: "GPT / Claude / Qwen / 你自己的" },
+      ]
+    : [
+        { feature: "Trace tree (parent / child)", a: true, b: true, c: true, sl: false, note: "Orchestration debug" },
+        { feature: "Bad-case auto-clustering", a: false, b: "partial", c: false, sl: true, note: "Recurring failure patterns" },
+        { feature: "Regression suite (golden cases)", a: "partial", b: true, c: false, sl: true, note: "Prompt change → pass rate diff" },
+        { feature: "Cross-channel alerting", a: false, b: false, c: "partial", sl: true, note: "DingTalk / Slack / Telegram / Lark" },
+        { feature: "Open-source core", a: false, b: false, c: true, sl: true, note: "MIT-licensed, self-hostable" },
+        { feature: "Built for product owners, not devs", a: false, b: false, c: false, sl: true, note: "UI for PM / ops, not engineers" },
+        { feature: "i18n quality flags", a: false, b: false, c: false, sl: true, note: "Multi-language drift detection" },
+        { feature: "Custom judge model", a: true, b: true, c: false, sl: true, note: "GPT / Claude / Qwen / your own" },
+      ]
   return (
     <section id="compare" className="border-t border-border-soft py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-12 text-center">
-          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">Compare</p>
-          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            How SmartLoop fits next to your other tools.
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-sm text-text-secondary">
-            We don't replace LangSmith — they trace, we evaluate. We don't replace Sentry — they catch crashes, we catch bad answers.
-          </p>
+          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">{t.compareEyebrow}</p>
+          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">{t.compareTitle}</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-sm text-text-secondary">{t.compareSubtitle}</p>
         </div>
 
         <div className="sl-card overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-border-soft bg-bg-elev-2/40 text-left text-[10px] uppercase tracking-[0.18em] text-text-tertiary">
               <tr>
-                <th className="px-5 py-4 font-medium">Capability</th>
+                <th className="px-5 py-4 font-medium">{t.compareColCapability}</th>
                 <th className="px-5 py-4 font-medium">LangSmith</th>
                 <th className="px-5 py-4 font-medium">Braintrust</th>
                 <th className="px-5 py-4 font-medium">Helicone</th>
@@ -720,46 +737,9 @@ function ComparisonSection() {
               </tr>
             </thead>
             <tbody>
-              <CompareRow
-                feature="Trace tree (parent / child)"
-                a={true} b={true} c={true} sl={false}
-                note="Built for: orchestration debug"
-              />
-              <CompareRow
-                feature="Bad-case auto-clustering"
-                a={false} b="partial" c={false} sl={true}
-                note="Recurring failure patterns"
-              />
-              <CompareRow
-                feature="Regression suite (golden cases)"
-                a="partial" b={true} c={false} sl={true}
-                note="Prompt change → pass rate diff"
-              />
-              <CompareRow
-                feature="Cross-channel alerting"
-                a={false} b={false} c="partial" sl={true}
-                note="DingTalk / Slack / Telegram / 飞书"
-              />
-              <CompareRow
-                feature="Open-source core"
-                a={false} b={false} c={true} sl={true}
-                note="MIT-licensed, self-hostable"
-              />
-              <CompareRow
-                feature="Built for product owners, not devs"
-                a={false} b={false} c={false} sl={true}
-                note="UI for PM / ops, not engineers"
-              />
-              <CompareRow
-                feature="i18n quality flags"
-                a={false} b={false} c={false} sl={true}
-                note="Multi-language drift detection"
-              />
-              <CompareRow
-                feature="Custom judge model"
-                a={true} b={true} c={false} sl={true}
-                note="GPT / Claude / Qwen / your own"
-              />
+              {rows.map((r) => (
+                <CompareRow key={r.feature} {...r} />
+              ))}
             </tbody>
           </table>
         </div>
@@ -813,25 +793,23 @@ function Mark({ v, highlight }: { v: boolean | "partial"; highlight?: boolean })
 }
 
 // ============================================================================
-// Open source section
+// Open source
 // ============================================================================
 
-function OpenSourceSection() {
+function OpenSourceSection({ t }: { t: Strings }) {
   return (
     <section className="border-t border-border-soft py-24">
       <div className="mx-auto max-w-5xl px-6 text-center">
-        <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">Open source</p>
+        <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-text-tertiary">{t.osEyebrow}</p>
         <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          MIT-licensed. <span className="sl-gradient-text">Yours forever.</span>
+          {t.osTitleA} <span className="sl-gradient-text">{t.osTitleAccent}</span>
         </h2>
-        <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-text-secondary">
-          One docker compose up and SmartLoop runs on your infra. No data leaves your network. No per-seat pricing. No vendor lock-in. Fork it, modify it, ship it.
-        </p>
+        <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-text-secondary">{t.osBody}</p>
 
         <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <StatCard label="License" value="MIT" sub="Free to use commercially" />
-          <StatCard label="Self-host" value="5 min" sub="One docker compose up" />
-          <StatCard label="Stack" value="Bun · TS" sub="Hackable, no codegen" />
+          <StatCard label={t.osLicenseLabel} value="MIT" sub={t.osLicenseSub} />
+          <StatCard label={t.osSelfHostLabel} value={t.osSelfHostValue} sub={t.osSelfHostSub} />
+          <StatCard label={t.osStackLabel} value={t.osStackValue} sub={t.osStackSub} />
         </div>
 
         <div className="mt-10 flex justify-center gap-3">
@@ -841,14 +819,14 @@ function OpenSourceSection() {
             className="inline-flex h-11 items-center gap-2 rounded-xl border border-border-soft bg-bg-elev-1 px-5 text-sm hover:border-border"
           >
             <IconGitHub />
-            github.com/Binzaga/SmartLoop
+            {t.osCtaSecondary}
           </Link>
           <Link
             href="https://github.com/Binzaga/SmartLoop/blob/main/docs/DEVELOPMENT.md"
             target="_blank"
             className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-br from-accent-from to-accent-to px-5 text-sm font-medium text-bg-base"
           >
-            Self-host guide
+            {t.osCtaPrimary}
             <IconArrowRight size={14} />
           </Link>
         </div>
@@ -871,22 +849,20 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub: st
 // CTA
 // ============================================================================
 
-function CTASection() {
+function CTASection({ t, locale }: { t: Strings; locale: Locale }) {
   return (
     <section className="border-t border-border-soft py-24">
       <div className="mx-auto max-w-4xl px-6 text-center">
         <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">
-          Ship AI that <span className="sl-gradient-text">tells the truth.</span>
+          {t.ctaTitleA} <span className="sl-gradient-text">{t.ctaTitleAccent}</span>
         </h2>
-        <p className="mx-auto mt-5 max-w-xl text-sm text-text-secondary">
-          5 minutes from clone to first event. Bring your own LLM, your own infra, your own dashboard.
-        </p>
+        <p className="mx-auto mt-5 max-w-xl text-sm text-text-secondary">{t.ctaSubtitle}</p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/dashboard"
             className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-br from-accent-from to-accent-to px-6 text-sm font-medium text-bg-base shadow-lg shadow-accent-from/25"
           >
-            Open Dashboard
+            {t.heroCtaPrimary}
             <IconArrowRight size={14} />
           </Link>
           <Link
@@ -895,7 +871,7 @@ function CTASection() {
             className="inline-flex h-11 items-center gap-2 rounded-xl border border-border-soft bg-bg-elev-1 px-5 text-sm text-text-secondary hover:border-border hover:text-text-primary"
           >
             <IconGitHub />
-            View on GitHub
+            {locale === "zh" ? "在 GitHub 查看" : "View on GitHub"}
           </Link>
         </div>
       </div>
@@ -907,58 +883,56 @@ function CTASection() {
 // Footer
 // ============================================================================
 
-function MarketingFooter() {
+function MarketingFooter({ t, locale }: { t: Strings; locale: Locale }) {
   return (
     <footer className="border-t border-border-soft py-12">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 md:grid-cols-4">
         <div className="col-span-2 md:col-span-1">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href={withLang("/", locale)} className="flex items-center gap-2">
             <BrandMark size={20} />
             <span className="text-sm font-semibold">SmartLoop</span>
           </Link>
-          <p className="mt-3 text-[12px] leading-relaxed text-text-tertiary">
-            Open-source quality observation platform for AI products.
-          </p>
+          <p className="mt-3 text-[12px] leading-relaxed text-text-tertiary">{t.footerDesc}</p>
         </div>
 
         <FooterCol
-          title="Product"
+          title={t.footerProduct}
           links={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Features", href: "#features" },
-            { label: "How it works", href: "#how" },
-            { label: "Compare", href: "#compare" },
+            { label: t.fProductDashboard, href: "/dashboard" },
+            { label: t.fProductFeatures, href: withLang("/#features", locale) },
+            { label: t.fProductHow, href: withLang("/#how", locale) },
+            { label: t.fProductCompare, href: withLang("/#compare", locale) },
           ]}
         />
         <FooterCol
-          title="Resources"
+          title={t.footerResources}
           links={[
-            { label: "GitHub", href: "https://github.com/Binzaga/SmartLoop", external: true },
-            { label: "Docs", href: "https://github.com/Binzaga/SmartLoop/tree/main/docs", external: true },
-            { label: "SDK", href: "https://github.com/Binzaga/SmartLoop/blob/main/docs/SDK.md", external: true },
-            { label: "Roadmap", href: "https://github.com/Binzaga/SmartLoop/blob/main/docs/ROADMAP.md", external: true },
+            { label: t.fResourcesGitHub, href: "https://github.com/Binzaga/SmartLoop", external: true },
+            { label: t.fResourcesDocs, href: "https://github.com/Binzaga/SmartLoop/tree/main/docs", external: true },
+            { label: t.fResourcesSDK, href: "https://github.com/Binzaga/SmartLoop/blob/main/docs/SDK.md", external: true },
+            { label: t.fResourcesRoadmap, href: "https://github.com/Binzaga/SmartLoop/blob/main/docs/ROADMAP.md", external: true },
           ]}
         />
         <FooterCol
-          title="Community"
+          title={t.footerCommunity}
           links={[
-            { label: "Contribute", href: "https://github.com/Binzaga/SmartLoop/blob/main/CONTRIBUTING.md", external: true },
-            { label: "Issues", href: "https://github.com/Binzaga/SmartLoop/issues", external: true },
-            { label: "Discussions", href: "https://github.com/Binzaga/SmartLoop/discussions", external: true },
-            { label: "License (MIT)", href: "https://github.com/Binzaga/SmartLoop/blob/main/LICENSE", external: true },
+            { label: t.fCommContribute, href: "https://github.com/Binzaga/SmartLoop/blob/main/CONTRIBUTING.md", external: true },
+            { label: t.fCommIssues, href: "https://github.com/Binzaga/SmartLoop/issues", external: true },
+            { label: t.fCommDiscussions, href: "https://github.com/Binzaga/SmartLoop/discussions", external: true },
+            { label: t.fCommLicense, href: "https://github.com/Binzaga/SmartLoop/blob/main/LICENSE", external: true },
           ]}
         />
       </div>
 
       <div className="mx-auto mt-10 max-w-6xl border-t border-border-soft px-6 pt-6">
         <div className="flex flex-col items-start justify-between gap-3 text-[11px] text-text-tertiary md:flex-row md:items-center">
-          <span>© 2026 SmartLoop contributors · MIT</span>
+          <span>{t.footerRights}</span>
           <span className="inline-flex items-center gap-1.5">
             <span className="relative flex h-1.5 w-1.5">
               <span className="sl-pulse absolute inline-flex h-full w-full rounded-full bg-emerald-400" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </span>
-            All systems operational
+            {t.footerOperational}
           </span>
         </div>
       </div>
@@ -992,10 +966,6 @@ function FooterCol({
     </div>
   )
 }
-
-// ============================================================================
-// Inline GitHub icon (24px)
-// ============================================================================
 
 function IconGitHub({ size = 14 }: { size?: number }) {
   return (
