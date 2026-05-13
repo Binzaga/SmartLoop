@@ -159,4 +159,214 @@ export async function dashboardRoutes(app: FastifyInstance) {
       totals,
     }
   })
+
+  // ===== Product detail =====
+  app.get<{ Params: { id: string } }>(
+    "/admin/dashboard/products/:id",
+    async (req, reply) => {
+      const productId = req.params.id
+
+      const product = await db
+        .select({
+          id: schema.products.id,
+          orgId: schema.products.orgId,
+          name: schema.products.name,
+          description: schema.products.description,
+          ownerTeam: schema.products.ownerTeam,
+          enabled: schema.products.enabled,
+          createdAt: schema.products.createdAt,
+        })
+        .from(schema.products)
+        .where(eq(schema.products.id, productId))
+        .limit(1)
+
+      if (product.length === 0) {
+        reply.code(404)
+        return { error: "product not found" }
+      }
+
+      // 24h + 7d windowed metrics
+      const now = new Date()
+      const dayAgo = new Date(now.getTime() - 24 * 3600 * 1000)
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000)
+
+      const stats = await db.execute(sql`
+        with e24 as (select * from events where product_id = ${productId} and created_at >= ${dayAgo.toISOString()}),
+             e7  as (select * from events where product_id = ${productId} and created_at >= ${weekAgo.toISOString()}),
+             fb24 as (
+               select sum(case when rating='down' then 1 else 0 end)::int as downs,
+                      sum(case when rating='up' then 1 else 0 end)::int as ups,
+                      count(*)::int as total
+               from feedback
+               where product_id = ${productId} and created_at >= ${dayAgo.toISOString()}
+             )
+        select
+          (select count(*) from e24)::int as event_count_24h,
+          (select count(*) from e7)::int as event_count_7d,
+          (select avg((scores->>'overall')::float) from e24 where scores is not null) as avg_overall_24h,
+          (select avg((scores->>'overall')::float) from e7 where scores is not null) as avg_overall_7d,
+          (select sum(case when scores ? 'tags' and (scores->'tags')::jsonb ?| array['hallucination'] then 1 else 0 end)::int from e24) as hallucination_24h,
+          (select avg(latency_ms)::int from e24) as avg_latency_24h,
+          (select sum(latency_ms * tokens_input)::bigint from e24) as approx_cost_units,
+          (select count(*) from fb24)::int as feedback_count_24h,
+          (select downs from fb24) as downs_24h,
+          (select ups from fb24) as ups_24h
+      `)
+      const s = (stats as unknown as any[])[0] ?? {}
+
+      // 7d daily activity bucket
+      const trend = await db.execute(sql`
+        select
+          date_trunc('day', created_at) as day,
+          count(*)::int as events,
+          avg((scores->>'overall')::float) as avg_score,
+          sum(case when scores ? 'tags' and (scores->'tags')::jsonb ?| array['hallucination'] then 1 else 0 end)::int as halls
+        from events
+        where product_id = ${productId} and created_at >= ${weekAgo.toISOString()}
+        group by 1 order by 1 asc
+      `)
+
+      // Recent events for this product
+      const recent = await db.execute(sql`
+        select
+          e.id, e.input_message, e.output_message, e.model,
+          (e.scores->>'overall')::int as overall_score,
+          coalesce(e.scores->'tags', '[]'::jsonb) as tags,
+          e.created_at,
+          (select rating from feedback f where f.event_id = e.id order by f.created_at desc limit 1) as rating
+        from events e
+        where e.product_id = ${productId}
+        order by e.created_at desc
+        limit 30
+      `)
+
+      // Clusters (placeholder until worker is live; falls back to tag-derived synthetic clusters)
+      const tagDist = await db.execute(sql`
+        with tag_events as (
+          select tag, e.id
+          from events e, jsonb_array_elements_text(coalesce(scores->'tags', '[]'::jsonb)) as tag
+          where e.product_id = ${productId} and e.created_at >= ${dayAgo.toISOString()}
+        )
+        select tag, count(*)::int as count
+        from tag_events
+        where tag in ('hallucination','too_short','too_long','off_topic','format_violation','safety_violation','multilingual_drift','wrong_lookup')
+        group by tag order by count desc
+      `)
+
+      return {
+        product: product[0],
+        stats: {
+          event_count_24h: s.event_count_24h ?? 0,
+          event_count_7d: s.event_count_7d ?? 0,
+          avg_overall_24h: s.avg_overall_24h !== null ? Number(s.avg_overall_24h) : null,
+          avg_overall_7d: s.avg_overall_7d !== null ? Number(s.avg_overall_7d) : null,
+          hallucination_24h: s.hallucination_24h ?? 0,
+          avg_latency_24h: s.avg_latency_24h ?? 0,
+          feedback_count_24h: s.feedback_count_24h ?? 0,
+          downs_24h: s.downs_24h ?? 0,
+          ups_24h: s.ups_24h ?? 0,
+        },
+        trend: (trend as unknown as any[]).map((r) => ({
+          day: r.day,
+          events: r.events,
+          avgScore: r.avg_score !== null ? Number(r.avg_score) : null,
+          hallucinations: r.halls,
+        })),
+        recentEvents: (recent as unknown as any[]).map((r) => ({
+          id: r.id,
+          inputMessage: r.input_message,
+          outputMessage: r.output_message,
+          model: r.model,
+          overallScore: r.overall_score,
+          tags: Array.isArray(r.tags) ? r.tags : [],
+          rating: r.rating,
+          createdAt: r.created_at,
+        })),
+        tagDistribution: (tagDist as unknown as any[]).map((r) => ({
+          tag: r.tag,
+          count: r.count,
+        })),
+      }
+    },
+  )
+
+  // ===== Single event detail =====
+  app.get<{ Params: { id: string } }>("/admin/dashboard/events/:id", async (req, reply) => {
+    const eventId = req.params.id
+
+    const evRows = await db.execute(sql`
+      select
+        e.*,
+        p.name as product_name,
+        p.owner_team as product_owner_team
+      from events e
+      join products p on p.id = e.product_id
+      where e.id = ${eventId}
+    `)
+    if ((evRows as unknown as any[]).length === 0) {
+      reply.code(404)
+      return { error: "event not found" }
+    }
+    const r = (evRows as unknown as any[])[0]
+
+    const fbRows = await db.execute(sql`
+      select id, rating, reasons, comment, created_at
+      from feedback
+      where event_id = ${eventId}
+      order by created_at desc
+    `)
+
+    // Related events in same conversation
+    let related: any[] = []
+    if (r.conversation_id) {
+      const rel = await db.execute(sql`
+        select id, input_message, output_message, (scores->>'overall')::int as score, created_at
+        from events
+        where conversation_id = ${r.conversation_id} and id <> ${eventId}
+        order by created_at asc limit 10
+      `)
+      related = (rel as unknown as any[]).map((x) => ({
+        id: x.id,
+        inputMessage: x.input_message,
+        outputMessage: x.output_message,
+        score: x.score,
+        createdAt: x.created_at,
+      }))
+    }
+
+    return {
+      event: {
+        id: r.id,
+        productId: r.product_id,
+        productName: r.product_name,
+        productOwnerTeam: r.product_owner_team,
+        conversationId: r.conversation_id,
+        userIdHash: r.user_id_hash,
+        inputMessage: r.input_message,
+        outputMessage: r.output_message,
+        model: r.model,
+        promptVersionLabel: r.prompt_version_label,
+        tokensInput: r.tokens_input,
+        tokensOutput: r.tokens_output,
+        costUsd: r.cost_usd !== null ? Number(r.cost_usd) : null,
+        latencyMs: r.latency_ms,
+        toolsCalled: r.tools_called ?? [],
+        scores: r.scores,
+        judgeReasoning: r.judge_reasoning,
+        status: r.status,
+        errorMessage: r.error_message,
+        language: r.language,
+        metadata: r.metadata,
+        createdAt: r.created_at,
+      },
+      feedback: (fbRows as unknown as any[]).map((f) => ({
+        id: f.id,
+        rating: f.rating,
+        reasons: f.reasons,
+        comment: f.comment,
+        createdAt: f.created_at,
+      })),
+      relatedEvents: related,
+    }
+  })
 }
