@@ -1,0 +1,21 @@
+{
+  "name": "smartloop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SaleSmartly AI Product Quality Monitoring & Iteration Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "bun run --filter @smartloop/api dev",
+    "dev:web": "bun run --filter @smartloop/web dev",
+    "db:up": "docker compose up -d postgres redis",
+    "db:down": "docker compose down",
+    "db:migrate": "bun run --filter @smartloop/api db:migrate",
+    "db:seed": "bun run --filter @smartloop/api db:seed"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
+  }
+}

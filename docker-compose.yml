@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartloop-postgres
+    environment:
+      POSTGRES_USER: smartloop
+      POSTGRES_PASSWORD: smartloop_dev_pass
+      POSTGRES_DB: smartloop
+    ports:
+      - "5433:5432"
+    volumes:
+      - smartloop-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartloop -d smartloop"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: smartloop-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - smartloop-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  smartloop-pg-data:
+  smartloop-redis-data:
