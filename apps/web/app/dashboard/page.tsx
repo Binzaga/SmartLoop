@@ -180,13 +180,21 @@ function Hero({
         </div>
 
         <div className="flex shrink-0 items-center gap-3 sl-fade-in" style={{ animationDelay: "150ms" }}>
-          <button className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-accent-from to-accent-to px-5 py-2.5 text-sm font-medium text-bg-base shadow-lg shadow-accent-from/20 transition hover:shadow-accent-from/30">
+          <Link
+            href="https://github.com/Binzaga/SmartLoop/blob/main/docs/SDK.md"
+            target="_blank"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-accent-from to-accent-to px-5 py-2.5 text-sm font-medium text-bg-base shadow-lg shadow-accent-from/20 transition hover:shadow-accent-from/30"
+          >
             集成新产品
             <IconArrowRight size={14} />
-          </button>
-          <button className="inline-flex items-center gap-2 rounded-xl border border-border-soft bg-bg-elev-1 px-4 py-2.5 text-sm text-text-secondary hover:border-border">
+          </Link>
+          <Link
+            href="https://github.com/Binzaga/SmartLoop/tree/main/docs"
+            target="_blank"
+            className="inline-flex items-center gap-2 rounded-xl border border-border-soft bg-bg-elev-1 px-4 py-2.5 text-sm text-text-secondary hover:border-border"
+          >
             查看文档
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -349,8 +357,8 @@ function SpotlightStrip({ spotlight }: { spotlight: EventSummary | null }) {
           <div className="flex shrink-0 items-center gap-2 md:flex-col md:items-end">
             <ScoreChip score={spotlight.overallScore} large />
             <Link
-              href={`/events/${spotlight.id}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-border-soft bg-bg-elev-2 px-3 py-1.5 text-xs text-text-secondary hover:border-border"
+              href={`/dashboard/events/${spotlight.id}`}
+              className="inline-flex items-center gap-1 rounded-lg border border-border-soft bg-bg-elev-2 px-3 py-1.5 text-xs text-text-secondary hover:border-border hover:text-text-primary"
             >
               查看根因
               <IconArrowRight size={11} />
@@ -429,7 +437,7 @@ function ProductCard({ p }: { p: ProductHealth }) {
   const sparkTo = p.healthScore >= 80 ? "#10b981" : p.healthScore >= 60 ? "#f59e0b" : "#ef4444"
 
   return (
-    <Link href={`/products/${p.productId}`} className="sl-card sl-card-hover block p-6">
+    <Link href={`/dashboard/products/${p.productId}`} className="sl-card sl-card-hover block p-6">
       <div className="flex items-start justify-between gap-6">
         <div className="min-w-0 flex-1">
           <div className="mb-3 flex items-center gap-2">
@@ -551,6 +559,7 @@ function EventTable({ events }: { events: EventSummary[] }) {
             <th className="px-5 py-3">评分</th>
             <th className="px-5 py-3">Tags</th>
             <th className="px-5 py-3">反馈</th>
+            <th className="px-5 py-3" />
           </tr>
         </thead>
         <tbody>
@@ -568,20 +577,25 @@ function EventTable({ events }: { events: EventSummary[] }) {
                 </div>
               </td>
               <td className="px-5 py-3.5 align-top">
-                <div className="inline-flex items-center gap-2">
+                <Link
+                  href={`/dashboard/products/${e.productId}`}
+                  className="inline-flex items-center gap-2 transition hover:opacity-80"
+                >
                   <ProductIcon id={e.productId} />
                   <code className="sl-mono text-[11px] text-text-secondary">{e.productId}</code>
-                </div>
+                </Link>
               </td>
               <td className="px-5 py-3.5 align-top">
-                <div className="max-w-md truncate text-text-primary" title={e.inputMessage ?? ""}>
-                  {e.inputMessage ?? <span className="text-text-tertiary">—</span>}
-                </div>
-                {e.outputMessage && (
-                  <div className="mt-1 max-w-md truncate text-[11px] text-text-tertiary" title={e.outputMessage}>
-                    → {e.outputMessage}
+                <Link href={`/dashboard/events/${e.id}`} className="block hover:text-accent-from">
+                  <div className="max-w-md truncate" title={e.inputMessage ?? ""}>
+                    {e.inputMessage ?? <span className="text-text-tertiary">—</span>}
                   </div>
-                )}
+                  {e.outputMessage && (
+                    <div className="mt-1 max-w-md truncate text-[11px] text-text-tertiary" title={e.outputMessage}>
+                      → {e.outputMessage}
+                    </div>
+                  )}
+                </Link>
               </td>
               <td className="px-5 py-3.5 align-top">
                 <ScoreChip score={e.overallScore} />
@@ -597,6 +611,15 @@ function EventTable({ events }: { events: EventSummary[] }) {
                 {e.rating === "up" && <IconThumbsUp size={14} className="text-emerald-400" />}
                 {e.rating === "down" && <IconThumbsDown size={14} className="text-red-400" />}
                 {!e.rating && <span className="text-text-quaternary">—</span>}
+              </td>
+              <td className="px-5 py-3.5 align-top">
+                <Link
+                  href={`/dashboard/events/${e.id}`}
+                  className="inline-flex items-center gap-1 rounded-md border border-border-soft bg-bg-elev-2 px-2 py-1 text-[10px] text-text-tertiary opacity-0 transition group-hover:opacity-100 hover:border-border hover:text-text-primary"
+                >
+                  详情
+                  <IconArrowRight size={9} />
+                </Link>
               </td>
             </tr>
           ))}
