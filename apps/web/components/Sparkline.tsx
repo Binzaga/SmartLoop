@@ -1,22 +1,20 @@
-/**
- * Tiny inline SVG sparkline. Deterministic from a numeric series.
- * Used inside product cards to show 7d activity at a glance.
- */
 export function Sparkline({
   values,
-  width = 120,
-  height = 28,
-  stroke = "#5eead4",
+  width = 180,
+  height = 40,
+  gradientFrom = "#a78bfa",
+  gradientTo = "#34d399",
 }: {
   values: number[]
   width?: number
   height?: number
-  stroke?: string
+  gradientFrom?: string
+  gradientTo?: string
 }) {
   if (values.length === 0) {
     return (
       <svg width={width} height={height} className="opacity-30">
-        <line x1="0" y1={height / 2} x2={width} y2={height / 2} stroke="#26262d" strokeWidth="1.5" />
+        <line x1="0" y1={height / 2} x2={width} y2={height / 2} stroke="#26262d" strokeWidth="1.5" strokeDasharray="3 4" />
       </svg>
     )
   }
@@ -28,24 +26,42 @@ export function Sparkline({
 
   const points = values.map((v, i) => {
     const x = i * stepX
-    const y = height - ((v - min) / range) * (height - 4) - 2
-    return `${x.toFixed(1)},${y.toFixed(1)}`
+    const y = height - ((v - min) / range) * (height - 6) - 3
+    return [x, y] as [number, number]
   })
 
-  const path = `M ${points.join(" L ")}`
-  // Fill polygon under the line
-  const fillPath = `${path} L ${width.toFixed(1)},${height} L 0,${height} Z`
+  // Smooth curve using simple bezier
+  const path = points.reduce((acc, [x, y], i) => {
+    if (i === 0) return `M ${x},${y}`
+    const [px, py] = points[i - 1]
+    const cx = (px + x) / 2
+    return `${acc} Q ${cx},${py} ${cx},${(py + y) / 2} T ${x},${y}`
+  }, "")
+
+  const fillPath = `${path} L ${width},${height} L 0,${height} Z`
+  const gid = `spark-${Math.random().toString(36).slice(2, 7)}`
+  const sid = `spark-stroke-${Math.random().toString(36).slice(2, 7)}`
+
+  const lastX = points[points.length - 1][0]
+  const lastY = points[points.length - 1][1]
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
       <defs>
-        <linearGradient id="sl-spark-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={stroke} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={stroke} stopOpacity="0" />
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={gradientTo} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={gradientTo} stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id={sid} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={gradientFrom} />
+          <stop offset="100%" stopColor={gradientTo} />
         </linearGradient>
       </defs>
-      <path d={fillPath} fill="url(#sl-spark-fill)" />
-      <path d={path} stroke={stroke} strokeWidth="1.5" fill="none" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={fillPath} fill={`url(#${gid})`} />
+      <path d={path} stroke={`url(#${sid})`} strokeWidth="1.8" fill="none" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Last point dot */}
+      <circle cx={lastX} cy={lastY} r="3" fill={gradientTo} />
+      <circle cx={lastX} cy={lastY} r="6" fill={gradientTo} opacity="0.25" />
     </svg>
   )
 }
