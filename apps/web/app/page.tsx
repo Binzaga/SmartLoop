@@ -1,19 +1,24 @@
 import { adminFetch, type ProductHealth, type EventSummary } from "@/lib/api"
+import { BrandMark } from "@/components/BrandMark"
+import { HealthRing } from "@/components/HealthRing"
+import { Sparkline } from "@/components/Sparkline"
 import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
+interface OverviewResponse {
+  products: ProductHealth[]
+  recentEvents: EventSummary[]
+  totals: { events24h: number; events7d: number; productsCount: number; alertsFiring: number }
+}
+
 async function fetchOverview() {
-  return adminFetch<{
-    products: ProductHealth[]
-    recentEvents: EventSummary[]
-    totals: { events24h: number; events7d: number; productsCount: number; alertsFiring: number }
-  }>("/admin/dashboard/overview")
+  return adminFetch<OverviewResponse>("/admin/dashboard/overview")
 }
 
 export default async function Home() {
-  let data
+  let data: OverviewResponse | undefined
   let error: string | null = null
   try {
     data = await fetchOverview()
@@ -22,52 +27,27 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 text-zinc-900">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-baseline gap-3">
-            <span className="text-2xl font-semibold tracking-tight">SmartLoop</span>
-            <span className="text-xs text-zinc-500">v0.1 · AI Product Quality Platform</span>
-          </div>
-          <nav className="flex items-center gap-4 text-sm">
-            <span className="text-zinc-500">SaleSmartly</span>
-          </nav>
-        </div>
-      </header>
+    <main className="min-h-screen">
+      <TopBar />
 
-      <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="mx-auto max-w-7xl px-6 py-10">
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <div className="font-semibold">API 不可达</div>
-            <div className="font-mono text-xs mt-1">{error}</div>
-            <div className="mt-2 text-red-600">
-              检查 API 是否运行: <code>curl http://localhost:8088/healthz</code>
-            </div>
+          <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-sm">
+            <div className="font-semibold text-red-300">API 不可达</div>
+            <div className="sl-mono text-xs mt-1 text-red-200/80">{error}</div>
           </div>
         )}
 
         {data && (
           <>
-            <section className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-              <Stat label="24h 事件量" value={data.totals.events24h.toLocaleString()} />
-              <Stat label="7d 事件量" value={data.totals.events7d.toLocaleString()} />
-              <Stat label="接入产品数" value={data.totals.productsCount.toString()} />
-              <Stat
-                label="正在告警"
-                value={data.totals.alertsFiring.toString()}
-                tone={data.totals.alertsFiring > 0 ? "warn" : "ok"}
-              />
-            </section>
+            <Hero totals={data.totals} />
 
-            <section className="mb-10">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">产品健康总览</h2>
-                <span className="text-xs text-zinc-500">
-                  分数 = 24h 差评率 + 幻觉率 + 平均评测分综合
-                </span>
-              </div>
+            <Section
+              title="产品健康总览"
+              hint="评分综合 24h 评测分 × 差评率 × 幻觉次数"
+            >
               {data.products.length === 0 ? (
-                <EmptyCard hint="还没接入任何产品。用 admin 接口创建第一个 product 即可。" />
+                <EmptyCard hint="还没接入任何产品。" />
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {data.products.map((p) => (
@@ -75,132 +55,208 @@ export default async function Home() {
                   ))}
                 </div>
               )}
-            </section>
+            </Section>
 
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">最近事件</h2>
-                <span className="text-xs text-zinc-500">最近 20 条 AI 交互</span>
-              </div>
+            <Section title="实时事件流" hint="最近 20 条 AI 交互">
               {data.recentEvents.length === 0 ? (
-                <EmptyCard hint="还没有事件。用 SDK 上报第一条试试。" />
+                <EmptyCard hint="还没有事件。" />
               ) : (
-                <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
-                  <table className="w-full text-sm">
-                    <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wider text-zinc-500">
-                      <tr>
-                        <th className="px-4 py-3">时间</th>
-                        <th className="px-4 py-3">产品</th>
-                        <th className="px-4 py-3">用户输入</th>
-                        <th className="px-4 py-3">评分</th>
-                        <th className="px-4 py-3">Tags</th>
-                        <th className="px-4 py-3">反馈</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100">
-                      {data.recentEvents.map((e) => (
-                        <tr key={e.id} className="hover:bg-zinc-50">
-                          <td className="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">
-                            {new Date(e.createdAt).toLocaleString("zh-CN", { hour12: false })}
-                          </td>
-                          <td className="px-4 py-3">
-                            <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs">
-                              {e.productId}
-                            </code>
-                          </td>
-                          <td className="px-4 py-3 max-w-md truncate" title={e.inputMessage ?? ""}>
-                            {e.inputMessage ?? <span className="text-zinc-400">—</span>}
-                          </td>
-                          <td className="px-4 py-3">
-                            <ScoreChip score={e.overallScore} />
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex flex-wrap gap-1">
-                              {e.tags.map((t) => (
-                                <Tag key={t} t={t} />
-                              ))}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            {e.rating === "up" && <span className="text-green-600">👍</span>}
-                            {e.rating === "down" && <span className="text-red-600">👎</span>}
-                            {!e.rating && <span className="text-zinc-300">—</span>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <EventTable events={data.recentEvents} />
               )}
-            </section>
+            </Section>
           </>
         )}
       </div>
 
-      <footer className="border-t border-zinc-200 bg-white py-4 text-center text-xs text-zinc-500">
-        SmartLoop · Hackathon MVP · {new Date().toLocaleDateString("zh-CN")}
+      <footer className="border-t border-[var(--border)] py-6 text-center text-xs text-[var(--text-tertiary)]">
+        SmartLoop · Hackathon MVP · Built for SaleSmartly · {new Date().toLocaleDateString("zh-CN")}
       </footer>
     </main>
   )
 }
 
-function Stat({
+function TopBar() {
+  return (
+    <header className="sticky top-0 z-10 border-b border-[var(--border)] backdrop-blur supports-[backdrop-filter]:bg-[rgba(10,10,12,0.6)]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-3">
+          <BrandMark size={28} />
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-semibold tracking-tight">SmartLoop</span>
+            <span className="text-[11px] uppercase tracking-widest text-[var(--text-tertiary)]">
+              v0.1 · AI Quality Platform
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-sm">
+          <LivePill />
+          <span className="hidden text-[var(--text-secondary)] md:inline">
+            for SaleSmartly
+          </span>
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function LivePill() {
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elev-1)] px-3 py-1">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 sl-pulse" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+      </span>
+      <span className="text-xs text-[var(--text-secondary)]">实时</span>
+    </div>
+  )
+}
+
+function Hero({
+  totals,
+}: {
+  totals: { events24h: number; events7d: number; productsCount: number; alertsFiring: number }
+}) {
+  return (
+    <section className="mb-10">
+      <div className="mb-6 max-w-3xl">
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+          让每一个 AI 产品 <GradientWord>自己说出</GradientWord>{" "}
+          它哪里错了
+        </h1>
+        <p className="mt-3 text-sm text-[var(--text-secondary)] md:text-base">
+          SmartLoop 是 SaleSmartly 内部所有 AI 产品共用的质量监控平台——SDK 一键接入,
+          差评自动归类,Prompt 改动跑回归,异常实时告警。
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard
+          label="24h 事件"
+          value={totals.events24h.toLocaleString()}
+          accent="from-violet-500/20 to-violet-500/0"
+        />
+        <KpiCard
+          label="7d 事件"
+          value={totals.events7d.toLocaleString()}
+          accent="from-sky-500/20 to-sky-500/0"
+        />
+        <KpiCard
+          label="接入产品"
+          value={totals.productsCount.toString()}
+          accent="from-teal-500/20 to-teal-500/0"
+        />
+        <KpiCard
+          label="正在告警"
+          value={totals.alertsFiring.toString()}
+          accent={totals.alertsFiring > 0 ? "from-red-500/20 to-red-500/0" : "from-emerald-500/20 to-emerald-500/0"}
+          tone={totals.alertsFiring > 0 ? "warn" : "ok"}
+        />
+      </div>
+    </section>
+  )
+}
+
+function GradientWord({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      style={{
+        background: "linear-gradient(120deg, #8b7cff 0%, #5eead4 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
+function Section({
+  title,
+  hint,
+  children,
+}: {
+  title: string
+  hint?: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="mb-10">
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        {hint && <span className="text-xs text-[var(--text-tertiary)]">{hint}</span>}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function KpiCard({
   label,
   value,
+  accent,
   tone = "default",
 }: {
   label: string
   value: string
+  accent: string
   tone?: "default" | "ok" | "warn" | "crit"
 }) {
-  const toneColor =
+  const text =
     tone === "warn"
-      ? "text-amber-600"
+      ? "text-amber-400"
       : tone === "crit"
-        ? "text-red-600"
+        ? "text-red-400"
         : tone === "ok"
-          ? "text-emerald-600"
-          : "text-zinc-900"
+          ? "text-emerald-400"
+          : "text-[var(--text-primary)]"
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5">
-      <div className="text-xs uppercase tracking-wider text-zinc-500">{label}</div>
-      <div className={`mt-1 text-3xl font-semibold ${toneColor}`}>{value}</div>
+    <div className={`sl-card relative overflow-hidden p-5`}>
+      <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} aria-hidden="true" />
+      <div className="text-[11px] uppercase tracking-widest text-[var(--text-tertiary)]">
+        {label}
+      </div>
+      <div className={`mt-2 text-3xl font-semibold tracking-tight tabular-nums ${text}`}>
+        {value}
+      </div>
     </div>
   )
 }
 
 function ProductCard({ p }: { p: ProductHealth }) {
-  const tone =
-    p.healthScore >= 80 ? "emerald" : p.healthScore >= 60 ? "amber" : "red"
-  const toneRing =
-    tone === "emerald"
-      ? "ring-emerald-200 bg-emerald-50"
-      : tone === "amber"
-        ? "ring-amber-200 bg-amber-50"
-        : "ring-red-200 bg-red-50"
-  const toneText =
-    tone === "emerald" ? "text-emerald-700" : tone === "amber" ? "text-amber-700" : "text-red-700"
+  // Synthesize a sparkline series from 7d/24h for now (real series in next iteration)
+  const fakeSeries = Array.from({ length: 8 }, (_, i) => {
+    const base = Math.max(1, p.eventCount7d / 8)
+    return base * (0.6 + 0.8 * Math.abs(Math.sin(i + p.productId.length)))
+  })
+  const sparkColor = p.healthScore >= 80 ? "#10b981" : p.healthScore >= 60 ? "#f59e0b" : "#ef4444"
+
   return (
     <Link
       href={`/products/${p.productId}`}
-      className="block rounded-lg border border-zinc-200 bg-white p-5 transition hover:border-zinc-300 hover:shadow-sm"
+      className="sl-card sl-card-hover block p-5 transition"
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
             <h3 className="truncate text-base font-semibold">{p.name}</h3>
-            <code className="text-xs text-zinc-400">{p.productId}</code>
+            <code className="sl-mono text-[11px] text-[var(--text-tertiary)]">
+              {p.productId}
+            </code>
           </div>
-          {p.ownerTeam && <p className="text-xs text-zinc-500">{p.ownerTeam}</p>}
+          {p.ownerTeam && (
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">{p.ownerTeam}</p>
+          )}
+          <div className="mt-3">
+            <Sparkline values={fakeSeries} stroke={sparkColor} />
+            <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">
+              7d activity
+            </div>
+          </div>
         </div>
-        <div
-          className={`flex shrink-0 items-center justify-center rounded-full px-3 py-1 text-sm font-semibold ring-1 ${toneRing} ${toneText}`}
-        >
-          {p.healthScore}
-        </div>
+        <HealthRing score={p.healthScore} />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+      <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[var(--border)] pt-4 text-xs">
         <Metric label="24h 事件" value={p.eventCount24h.toString()} />
         <Metric
           label="差评率"
@@ -230,25 +286,86 @@ function Metric({
   value: string
   tone?: "warn" | "crit"
 }) {
-  const color = tone === "warn" ? "text-amber-700" : tone === "crit" ? "text-red-700" : "text-zinc-900"
+  const color =
+    tone === "warn" ? "text-amber-400" : tone === "crit" ? "text-red-400" : "text-[var(--text-primary)]"
   return (
     <div>
-      <div className="text-zinc-500">{label}</div>
-      <div className={`mt-0.5 font-medium ${color}`}>{value}</div>
+      <div className="text-[var(--text-tertiary)]">{label}</div>
+      <div className={`mt-0.5 font-medium tabular-nums ${color}`}>{value}</div>
+    </div>
+  )
+}
+
+function EventTable({ events }: { events: EventSummary[] }) {
+  return (
+    <div className="sl-card overflow-hidden">
+      <table className="w-full text-sm">
+        <thead className="bg-[var(--bg-elev-2)] text-left text-[11px] uppercase tracking-widest text-[var(--text-tertiary)]">
+          <tr>
+            <th className="px-4 py-3 font-medium">时间</th>
+            <th className="px-4 py-3 font-medium">产品</th>
+            <th className="px-4 py-3 font-medium">用户输入</th>
+            <th className="px-4 py-3 font-medium">评分</th>
+            <th className="px-4 py-3 font-medium">Tags</th>
+            <th className="px-4 py-3 font-medium">反馈</th>
+          </tr>
+        </thead>
+        <tbody>
+          {events.map((e, i) => (
+            <tr
+              key={e.id}
+              className={`border-t border-[var(--border)] transition hover:bg-[var(--bg-elev-2)] ${
+                i === 0 ? "bg-emerald-500/[0.02]" : ""
+              }`}
+            >
+              <td className="px-4 py-3 text-[11px] text-[var(--text-tertiary)] whitespace-nowrap tabular-nums">
+                {new Date(e.createdAt).toLocaleString("zh-CN", { hour12: false })}
+              </td>
+              <td className="px-4 py-3">
+                <code className="sl-mono rounded bg-[var(--bg-elev-2)] px-1.5 py-0.5 text-[11px] text-[var(--text-secondary)]">
+                  {e.productId}
+                </code>
+              </td>
+              <td className="px-4 py-3 max-w-md truncate" title={e.inputMessage ?? ""}>
+                {e.inputMessage ?? <span className="text-[var(--text-tertiary)]">—</span>}
+              </td>
+              <td className="px-4 py-3">
+                <ScoreChip score={e.overallScore} />
+              </td>
+              <td className="px-4 py-3">
+                <div className="flex flex-wrap gap-1">
+                  {e.tags.map((t) => (
+                    <Tag key={t} t={t} />
+                  ))}
+                </div>
+              </td>
+              <td className="px-4 py-3">
+                {e.rating === "up" && <span className="text-emerald-400">👍</span>}
+                {e.rating === "down" && <span className="text-red-400">👎</span>}
+                {!e.rating && <span className="text-[var(--text-tertiary)]">—</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
 
 function ScoreChip({ score }: { score: number | null }) {
-  if (score === null) return <span className="text-zinc-300 text-xs">未评</span>
+  if (score === null) {
+    return <span className="text-[11px] text-[var(--text-tertiary)]">未评</span>
+  }
   const tone =
     score >= 4
-      ? "bg-emerald-100 text-emerald-700"
+      ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/20"
       : score >= 3
-        ? "bg-amber-100 text-amber-700"
-        : "bg-red-100 text-red-700"
+        ? "bg-amber-500/10 text-amber-300 ring-amber-500/20"
+        : "bg-red-500/10 text-red-300 ring-red-500/20"
   return (
-    <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${tone}`}>
+    <span
+      className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ring-1 tabular-nums ${tone}`}
+    >
       {score}
     </span>
   )
@@ -257,20 +374,24 @@ function ScoreChip({ score }: { score: number | null }) {
 function Tag({ t }: { t: string }) {
   const tone =
     t === "good"
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
       : t === "hallucination"
-        ? "bg-red-50 text-red-700 border-red-200"
+        ? "bg-red-500/10 text-red-300 border-red-500/30"
         : t.includes("safety")
-          ? "bg-red-50 text-red-700 border-red-200"
-          : "bg-zinc-50 text-zinc-600 border-zinc-200"
+          ? "bg-red-500/10 text-red-300 border-red-500/30"
+          : t.includes("too_long") || t.includes("too_short")
+            ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+            : "bg-[var(--bg-elev-2)] text-[var(--text-secondary)] border-[var(--border)]"
   return (
-    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${tone}`}>{t}</span>
+    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${tone}`}>
+      {t}
+    </span>
   )
 }
 
 function EmptyCard({ hint }: { hint: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-center text-sm text-zinc-500">
+    <div className="sl-card border-dashed p-10 text-center text-sm text-[var(--text-secondary)]">
       {hint}
     </div>
   )

@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Dark-first palette inspired by Linear / Vercel / Anthropic */
+  --bg-base: #0a0a0c;
+  --bg-elev-1: #111114;
+  --bg-elev-2: #16161a;
+  --border: #26262d;
+  --border-strong: #34343d;
+  --text-primary: #e7e7ea;
+  --text-secondary: #a1a1a8;
+  --text-tertiary: #6b6b73;
+
+  /* Accent: soft violet → cyan gradient (AI-feel without cliché purple) */
+  --accent-from: #8b7cff;
+  --accent-to: #5eead4;
+
+  /* Status */
+  --status-good: #10b981;
+  --status-warn: #f59e0b;
+  --status-crit: #ef4444;
+  --status-good-bg: rgba(16, 185, 129, 0.08);
+  --status-warn-bg: rgba(245, 158, 11, 0.08);
+  --status-crit-bg: rgba(239, 68, 68, 0.08);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  background:
+    radial-gradient(at 12% -10%, rgba(139, 124, 255, 0.12), transparent 50%),
+    radial-gradient(at 88% 110%, rgba(94, 234, 212, 0.08), transparent 50%),
+    var(--bg-base);
+  color: var(--text-primary);
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Slow pulsing dot for "live" indicators */
+@keyframes sl-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.92); }
+}
+.sl-pulse {
+  animation: sl-pulse 1.8s ease-in-out infinite;
+}
+
+/* Subtle gradient ring used on the brand mark and stat highlights */
+.sl-ring-grad {
+  background: conic-gradient(from 180deg at 50% 50%,
+    var(--accent-from) 0deg,
+    var(--accent-to) 180deg,
+    var(--accent-from) 360deg);
+}
+
+/* Glass card */
+.sl-card {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.025),
+    rgba(255, 255, 255, 0.01)
+  ),
+  var(--bg-elev-1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.sl-card-hover:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px rgba(139, 124, 255, 0.12), 0 8px 32px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a44; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Mono-style for IDs / tokens */
+.sl-mono {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  font-feature-settings: "ss01", "ss02", "cv01", "cv02";
 }
