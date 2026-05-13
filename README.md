@@ -63,3 +63,5 @@ smartloop/
 ## License
 
 Internal SaleSmartly project. Not for external distribution yet.
+
+[SmartLoop repo bootstrapped 2026-05-13]
