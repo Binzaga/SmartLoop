@@ -240,7 +240,33 @@ export async function dashboardRoutes(app: FastifyInstance) {
         limit 30
       `)
 
-      // Clusters (placeholder until worker is live; falls back to tag-derived synthetic clusters)
+      // Real clusters from the cluster worker
+      const clusterRows = await db
+        .select({
+          id: schema.clusters.id,
+          name: schema.clusters.name,
+          description: schema.clusters.description,
+          category: schema.clusters.category,
+          eventCount24h: schema.clusters.eventCount24h,
+          eventCount7d: schema.clusters.eventCount7d,
+          eventCountTotal: schema.clusters.eventCountTotal,
+          representativeEventIds: schema.clusters.representativeEventIds,
+          status: schema.clusters.status,
+        })
+        .from(schema.clusters)
+        .where(eq(schema.clusters.productId, productId))
+        .orderBy(desc(schema.clusters.eventCount24h))
+
+      // Recent firing alerts for this product
+      const alertRows = await db.execute(sql`
+        select id, title, severity, context, status, triggered_at, resolved_at
+        from alerts
+        where product_id = ${productId}
+        order by triggered_at desc
+        limit 5
+      `)
+
+      // Fallback tag distribution (kept for chart compatibility)
       const tagDist = await db.execute(sql`
         with tag_events as (
           select tag, e.id
@@ -286,9 +312,69 @@ export async function dashboardRoutes(app: FastifyInstance) {
           tag: r.tag,
           count: r.count,
         })),
+        clusters: clusterRows.map((c) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description,
+          category: c.category,
+          eventCount24h: c.eventCount24h,
+          eventCount7d: c.eventCount7d,
+          eventCountTotal: c.eventCountTotal,
+          representativeEventIds: c.representativeEventIds,
+          status: c.status,
+        })),
+        alerts: (alertRows as unknown as any[]).map((a) => ({
+          id: a.id,
+          title: a.title,
+          severity: a.severity,
+          context: a.context,
+          status: a.status,
+          triggeredAt: a.triggered_at,
+          resolvedAt: a.resolved_at,
+        })),
       }
     },
   )
+
+  // ===== Manual trigger: cluster worker =====
+  app.post("/admin/cluster/run", async () => {
+    const { runClusterBatch } = await import("../workers/cluster-worker")
+    const stats = await runClusterBatch()
+    return { ok: true, ...stats }
+  })
+
+  // ===== Manual trigger: alert worker =====
+  app.post("/admin/alert/run", async () => {
+    const { runAlertBatch } = await import("../workers/alert-worker")
+    const stats = await runAlertBatch()
+    return { ok: true, ...stats }
+  })
+
+  // ===== List recent alerts (for the overview)
+  app.get("/admin/dashboard/alerts", async () => {
+    const rows = await db.execute(sql`
+      select a.id, a.product_id, a.title, a.severity, a.status, a.context,
+             a.triggered_at, a.resolved_at,
+             p.name as product_name
+      from alerts a
+      join products p on p.id = a.product_id
+      order by a.triggered_at desc
+      limit 20
+    `)
+    return {
+      alerts: (rows as unknown as any[]).map((r) => ({
+        id: r.id,
+        productId: r.product_id,
+        productName: r.product_name,
+        title: r.title,
+        severity: r.severity,
+        status: r.status,
+        context: r.context,
+        triggeredAt: r.triggered_at,
+        resolvedAt: r.resolved_at,
+      })),
+    }
+  })
 
   // ===== Single event detail =====
   app.get<{ Params: { id: string } }>("/admin/dashboard/events/:id", async (req, reply) => {

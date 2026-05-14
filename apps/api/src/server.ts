@@ -9,6 +9,8 @@ import { adminRoutes } from "./routes/admin"
 import { judgeRoutes } from "./routes/judge"
 import { dashboardRoutes } from "./routes/dashboard"
 import { startJudgeWorker } from "./workers/judge-worker"
+import { startClusterWorker } from "./workers/cluster-worker"
+import { startAlertWorker } from "./workers/alert-worker"
 
 const app = Fastify({
   logger: {
@@ -41,12 +43,14 @@ const start = async () => {
     await app.listen({ port: config.API_PORT, host: config.API_HOST })
     app.log.info({ port: config.API_PORT }, "smartloop api listening")
 
-    // Start background judge worker if API key configured
+    // Start background workers
     if (config.DASHSCOPE_API_KEY) {
       startJudgeWorker(app.log)
     } else {
       app.log.warn("[judge] DASHSCOPE_API_KEY missing — judge worker NOT started")
     }
+    startClusterWorker(app.log)
+    startAlertWorker(app.log)
   } catch (err) {
     app.log.error(err)
     process.exit(1)

@@ -1,0 +1,1 @@
+ALTER TABLE "alerts" ALTER COLUMN "rule_id" DROP NOT NULL;

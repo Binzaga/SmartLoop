@@ -269,9 +269,8 @@ export const alerts = pgTable(
   "alerts",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    ruleId: uuid("rule_id")
-      .notNull()
-      .references(() => alertRules.id, { onDelete: "cascade" }),
+    // Nullable: system-generated alerts (e.g. cluster spike) have no user-defined rule.
+    ruleId: uuid("rule_id").references(() => alertRules.id, { onDelete: "cascade" }),
     productId: text("product_id").notNull(),
     title: text("title").notNull(),
     severity: text("severity").default("warning").notNull(), // 'info' | 'warning' | 'critical'

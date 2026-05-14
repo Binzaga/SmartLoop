@@ -56,6 +56,26 @@ interface ProductDetail {
     createdAt: string
   }>
   tagDistribution: Array<{ tag: string; count: number }>
+  clusters?: Array<{
+    id: string
+    name: string
+    description: string | null
+    category: string
+    eventCount24h: number
+    eventCount7d: number
+    eventCountTotal: number
+    representativeEventIds: string[]
+    status: "active" | "resolved" | "monitoring"
+  }>
+  alerts?: Array<{
+    id: string
+    title: string
+    severity: "info" | "warning" | "critical"
+    context: Record<string, unknown>
+    status: "firing" | "resolved"
+    triggeredAt: string
+    resolvedAt: string | null
+  }>
 }
 
 const TAG_META: Record<string, { label: string; tone: string }> = {
@@ -82,7 +102,7 @@ export default async function ProductDetail(props: {
   }
   if (!data) notFound()
 
-  const { product, stats, trend, recentEvents, tagDistribution } = data
+  const { product, stats, trend, recentEvents, tagDistribution, clusters = [], alerts = [] } = data
 
   // Health score (simple composite)
   let score = 100
@@ -186,17 +206,114 @@ export default async function ProductDetail(props: {
           </div>
         </section>
 
-        {/* Bad-case clusters / tag distribution */}
+        {/* Firing alerts (if any) */}
+        {alerts.filter((a) => a.status === "firing").length > 0 && (
+          <section className="mb-10">
+            <div className="mb-3 flex items-baseline justify-between border-b border-border-soft pb-3">
+              <h2 className="inline-flex items-center gap-2 text-base font-semibold tracking-tight">
+                <IconAlert size={14} className="text-red-400" />
+                Firing Alerts
+              </h2>
+              <span className="text-[11px] text-red-300">
+                {alerts.filter((a) => a.status === "firing").length} active
+              </span>
+            </div>
+            <div className="space-y-3">
+              {alerts
+                .filter((a) => a.status === "firing")
+                .map((a) => {
+                  const ctx = a.context as Record<string, any>
+                  const tone =
+                    a.severity === "critical"
+                      ? "border-red-500/40 bg-red-500/[0.06]"
+                      : "border-amber-500/40 bg-amber-500/[0.06]"
+                  return (
+                    <div key={a.id} className={`sl-card flex items-start gap-4 ${tone} p-5`}>
+                      <div
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                          a.severity === "critical" ? "bg-red-500/15 text-red-300" : "bg-amber-500/15 text-amber-300"
+                        }`}
+                      >
+                        <IconAlert size={18} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{a.title}</p>
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${
+                              a.severity === "critical"
+                                ? "border-red-500/30 bg-red-500/10 text-red-300"
+                                : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                            }`}
+                          >
+                            {a.severity}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-sm text-text-secondary">
+                          24h: <span className="font-medium tabular-nums text-text-primary">{ctx.count24h}</span> events
+                          · baseline {ctx.baselineDaily}/day · spike{" "}
+                          <span className="font-medium tabular-nums text-text-primary">{ctx.ratio?.toFixed?.(1) ?? "∞"}×</span>
+                        </p>
+                        <p className="mt-2 text-[11px] text-text-tertiary">
+                          Triggered {new Date(a.triggeredAt).toLocaleString("zh-CN", { hour12: false })}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          </section>
+        )}
+
+        {/* Bad-case clusters */}
         <section className="mb-10">
           <div className="mb-3 flex items-baseline justify-between border-b border-border-soft pb-3">
             <h2 className="inline-flex items-center gap-2 text-base font-semibold tracking-tight">
               <IconAlert size={14} className="text-accent-from" />
-              Bad-Case Distribution (24h)
+              Bad-Case Clusters
             </h2>
             <span className="text-[11px] text-text-tertiary">
-              Auto-clustering worker coming soon · showing tag-based grouping
+              {clusters.length > 0
+                ? `${clusters.length} active · auto-grouped by cluster worker`
+                : "Auto-clustering · runs every minute"}
             </span>
           </div>
+
+          {clusters.length > 0 && (
+            <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+              {clusters.map((c) => (
+                <div key={c.id} className="sl-card sl-card-hover p-5">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-[15px] font-semibold tracking-tight">{c.name}</h3>
+                      <code className="sl-mono text-[10px] text-text-tertiary">{c.category}</code>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-semibold tabular-nums">{c.eventCount24h}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-text-tertiary">24h</p>
+                    </div>
+                  </div>
+                  {c.description && (
+                    <p className="mb-3 text-[12px] leading-relaxed text-text-secondary">{c.description}</p>
+                  )}
+                  <div className="flex items-center justify-between border-t border-border-soft pt-3 text-[11px] text-text-tertiary">
+                    <span>
+                      {c.eventCount7d} in 7d · {c.eventCountTotal} total
+                    </span>
+                    {c.representativeEventIds.length > 0 && (
+                      <Link
+                        href={`/dashboard/events/${c.representativeEventIds[0]}`}
+                        className="inline-flex items-center gap-1 hover:text-text-primary"
+                      >
+                        See example <IconArrowRight size={10} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {tagDistribution.length === 0 ? (
             <div className="sl-card sl-dots p-12 text-center text-sm text-text-tertiary">
               No bad cases in last 24 hours. Healthy! 🎉
