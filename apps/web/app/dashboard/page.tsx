@@ -1,5 +1,6 @@
 import { adminFetch, type ProductHealth, type EventSummary } from "@/lib/api"
 import { BrandMark } from "@/components/BrandMark"
+import { UserMenu } from "@/components/UserMenu"
 import { HealthRing } from "@/components/HealthRing"
 import { Sparkline } from "@/components/Sparkline"
 import {
@@ -127,10 +128,7 @@ function TopBar() {
 
         <div className="flex items-center gap-2.5">
           <LiveBadge />
-          <button className="hidden items-center gap-1.5 rounded-lg border border-border-soft bg-bg-elev-1 px-3 py-1.5 text-xs text-text-secondary hover:border-border md:inline-flex">
-            <IconBolt size={12} />
-            操作
-          </button>
+          <UserMenu />
         </div>
       </div>
     </header>

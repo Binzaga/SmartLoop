@@ -1,0 +1,21 @@
+name: 🤔 Question / Discussion
+description: Ask a question or start a discussion.
+title: "[q]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For free-form discussion prefer [GitHub Discussions](https://github.com/Binzaga/SmartLoop/discussions).
+        For "how do I…" use this template.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you already tried?
+      description: Helps us avoid suggesting things you've already ruled out.

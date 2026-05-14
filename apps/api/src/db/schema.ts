@@ -27,6 +27,45 @@ export const clusterStatusEnum = pgEnum("cluster_status", [
   "monitoring",
 ])
 
+// ===== Users (Dashboard sign-in) =====
+
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: text("email").notNull().unique(),
+    name: text("name"),
+    passwordHash: text("password_hash"), // null = passwordless / OAuth-only
+    isAdmin: boolean("is_admin").default(false).notNull(),
+    avatarUrl: text("avatar_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  },
+  (t) => ({
+    emailIdx: index("users_email_idx").on(t.email),
+  }),
+)
+
+// ===== Sessions =====
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    token: text("token").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    userAgent: text("user_agent"),
+    ip: text("ip"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdx: index("sessions_user_idx").on(t.userId),
+    expiresIdx: index("sessions_expires_idx").on(t.expiresAt),
+  }),
+)
+
 // ===== Orgs =====
 
 export const orgs = pgTable("orgs", {

@@ -8,6 +8,7 @@ import { eventRoutes } from "./routes/events"
 import { adminRoutes } from "./routes/admin"
 import { judgeRoutes } from "./routes/judge"
 import { dashboardRoutes } from "./routes/dashboard"
+import { authRoutes } from "./routes/auth"
 import { startJudgeWorker } from "./workers/judge-worker"
 import { startClusterWorker } from "./workers/cluster-worker"
 import { startAlertWorker } from "./workers/alert-worker"
@@ -29,6 +30,9 @@ await app.register(sensible)
 
 // Public health
 await app.register(healthRoutes)
+
+// Auth (signup / login / logout / me) — no auth required on these endpoints
+await app.register(authRoutes)
 
 // Admin routes (bootstrap products / orgs)
 await app.register(adminRoutes)

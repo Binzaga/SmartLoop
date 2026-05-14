@@ -1,0 +1,39 @@
+name: ✨ Feature Request
+description: Suggest an enhancement.
+title: "[feat]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: |
+        Start with the problem, not the solution.
+        Who is hitting it, how often, what's the impact?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to see?
+      description: Your proposed solution, even if rough.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What did you think about and reject? Why?
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Which area?
+      multiple: true
+      options:
+        - API / backend
+        - SDK
+        - Dashboard / web
+        - Workers (judge / cluster / alert)
+        - Docs
+        - Deployment / DevOps
+        - Other

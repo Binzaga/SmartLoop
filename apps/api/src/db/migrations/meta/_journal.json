@@ -15,6 +15,13 @@
       "when": 1778753550383,
       "tag": "0001_jittery_riptide",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778753960828,
+      "tag": "0002_useful_tomorrow_man",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,10 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)]()
+[![CI](https://github.com/Binzaga/SmartLoop/actions/workflows/ci.yml/badge.svg)](https://github.com/Binzaga/SmartLoop/actions/workflows/ci.yml)
+[![Docker](https://github.com/Binzaga/SmartLoop/actions/workflows/docker.yml/badge.svg)](https://github.com/Binzaga/SmartLoop/actions/workflows/docker.yml)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
+[![Bun](https://img.shields.io/badge/runtime-Bun-fbf0df.svg)](https://bun.sh)
 
 SmartLoop is what your AI products use to **monitor quality, classify bad cases, run regression tests, and alert when things degrade** — without you wiring all that yourself.
 
