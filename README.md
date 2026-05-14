@@ -150,9 +150,10 @@ smartloop/
     ├── DEVELOPMENT.md    5-minute local setup
     ├── DEPLOYMENT.md     Production deployment guide
     ├── API.md            HTTP API reference
-    ├── SDK.md            Node.js SDK guide
-    ├── SECRETS.md        Secret management + rotation
-    └── ROADMAP.md        Done / WIP / future
+    ├── SDK.md                    Node.js SDK guide
+    ├── SECRETS.md                Secret management + rotation
+    ├── ROADMAP.md                Product roadmap — done / WIP / future
+    └── OPEN_SOURCE_ROADMAP.md    6-month community + launch operations plan
 ```
 
 ---
