@@ -142,7 +142,16 @@ export default async function ProductDetail(props: {
             </p>
           </div>
           <div className="flex items-center justify-end gap-6">
-            <HealthRing score={healthScore} size={104} />
+            <div className="flex flex-col items-end gap-3">
+              <HealthRing score={healthScore} size={104} />
+              <Link
+                href={`/dashboard/products/${product.id}/replays`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border-soft bg-bg-elev-1 px-3 py-1.5 text-[11px] text-text-secondary hover:border-border hover:text-text-primary"
+              >
+                Replay sandbox
+                <IconArrowRight size={11} />
+              </Link>
+            </div>
           </div>
         </header>
 
@@ -296,18 +305,27 @@ export default async function ProductDetail(props: {
                   {c.description && (
                     <p className="mb-3 text-[12px] leading-relaxed text-text-secondary">{c.description}</p>
                   )}
-                  <div className="flex items-center justify-between border-t border-border-soft pt-3 text-[11px] text-text-tertiary">
-                    <span>
-                      {c.eventCount7d} in 7d · {c.eventCountTotal} total
-                    </span>
-                    {c.representativeEventIds.length > 0 && (
-                      <Link
-                        href={`/dashboard/events/${c.representativeEventIds[0]}`}
-                        className="inline-flex items-center gap-1 hover:text-text-primary"
-                      >
-                        See example <IconArrowRight size={10} />
-                      </Link>
-                    )}
+                  <div className="border-t border-border-soft pt-3 text-[11px]">
+                    <div className="flex items-center justify-between text-text-tertiary">
+                      <span>
+                        {c.eventCount7d} in 7d · {c.eventCountTotal} total
+                      </span>
+                      {c.representativeEventIds.length > 0 && (
+                        <Link
+                          href={`/dashboard/events/${c.representativeEventIds[0]}`}
+                          className="inline-flex items-center gap-1 hover:text-text-primary"
+                        >
+                          See example <IconArrowRight size={10} />
+                        </Link>
+                      )}
+                    </div>
+                    <Link
+                      href={`/dashboard/products/${product.id}/replays/new?source=cluster&clusterId=${c.id}&clusterName=${encodeURIComponent(c.name)}&name=${encodeURIComponent("Fix for " + c.name)}`}
+                      className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent-from/30 bg-accent-from/10 px-3 py-1.5 text-[11px] font-medium text-accent-from transition hover:bg-accent-from/15"
+                    >
+                      Test a new prompt on this cluster
+                      <IconArrowRight size={10} />
+                    </Link>
                   </div>
                 </div>
               ))}
