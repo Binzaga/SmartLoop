@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { IconArrowRight } from "@/components/icons"
 
 export function LoginForm({
@@ -16,36 +15,43 @@ export function LoginForm({
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    startTransition(async () => {
+    setLoading(true)
+    try {
       const endpoint = mode === "signup" ? "/auth/signup" : "/auth/login"
       const body =
         mode === "signup" ? { email, password, name: name || undefined } : { email, password }
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        credentials: "include",
+        credentials: "same-origin",
         body: JSON.stringify(body),
       })
-      const data = await res.json().catch(() => ({}))
+      const data = await res.json().catch(() => ({} as any))
       if (!res.ok) {
-        setError(data.error ?? "Something went wrong.")
+        setError(data.error ?? `Login failed (HTTP ${res.status})`)
+        setLoading(false)
         return
       }
-      router.push(next ?? "/dashboard")
-      router.refresh()
-    })
+      // Hard navigation so the cookie that was just set is included in the
+      // server-side render of /dashboard. (router.push does a soft transition
+      // and the dashboard layout's getCurrentUser() may race the cookie.)
+      window.location.href = next ?? "/dashboard"
+    } catch (err) {
+      setError((err as Error).message ?? "Network error")
+      setLoading(false)
+    }
   }
 
   return (
     <div className="sl-card p-6">
       <div className="mb-5 flex rounded-lg bg-bg-elev-2 p-1 text-sm">
         <button
+          type="button"
           onClick={() => setMode("login")}
           className={`flex-1 rounded-md py-1.5 transition ${
             mode === "login"
@@ -56,6 +62,7 @@ export function LoginForm({
           Sign in
         </button>
         <button
+          type="button"
           onClick={() => setMode("signup")}
           className={`flex-1 rounded-md py-1.5 transition ${
             mode === "signup"
@@ -106,11 +113,11 @@ export function LoginForm({
 
         <button
           type="submit"
-          disabled={pending}
-          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-accent-from to-accent-to text-sm font-medium text-bg-base transition disabled:opacity-50"
+          disabled={loading}
+          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-accent-from to-accent-to text-sm font-medium text-bg-base transition disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {pending ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
-          {!pending && <IconArrowRight size={14} />}
+          {loading ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+          {!loading && <IconArrowRight size={14} />}
         </button>
       </form>
     </div>
