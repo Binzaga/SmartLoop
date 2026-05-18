@@ -1,10 +1,13 @@
 import OpenAI from "openai"
 import { config } from "../config"
 
-/** Shared OpenAI-compatible client pointed at DashScope (aliyun Qwen). */
+/** Shared OpenAI-compatible client pointed at DashScope (aliyun Qwen).
+ *  Timeout/retry set conservatively so a single hung call can't stall a worker. */
 export const llm = new OpenAI({
   apiKey: config.DASHSCOPE_API_KEY ?? "missing",
   baseURL: config.DASHSCOPE_BASE_URL,
+  timeout: 30_000, // 30s per request
+  maxRetries: 1,
 })
 
 export const judgeModel = config.JUDGE_MODEL

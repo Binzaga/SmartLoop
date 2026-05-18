@@ -281,6 +281,71 @@ export const regressionRuns = pgTable(
   }),
 )
 
+// ===== Replay runs (sandbox: test a new prompt against historical events) =====
+
+export const replayStatusEnum = pgEnum("replay_status", [
+  "queued",
+  "running",
+  "completed",
+  "failed",
+  "cancelled",
+])
+
+export const replaySourceEnum = pgEnum("replay_source", [
+  "cluster",
+  "event_ids",
+  "golden_set",
+  "recent",
+])
+
+export const replayRuns = pgTable(
+  "replay_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+
+    // What to replay
+    sourceType: replaySourceEnum("source_type").notNull(),
+    sourceRef: jsonb("source_ref").default({}).notNull(), // {clusterId} | {eventIds} | {goldenSetId} | {hours}
+
+    // The proposed new prompt being tested
+    newPrompt: text("new_prompt").notNull(),
+    newPromptLabel: text("new_prompt_label"), // optional human label like "v3.3-fix-hallucination"
+    model: text("model").notNull(),
+
+    // Aggregates (filled in as the worker progresses)
+    totalEvents: integer("total_events").default(0).notNull(),
+    completedEvents: integer("completed_events").default(0).notNull(),
+    improvedCount: integer("improved_count").default(0).notNull(), // new_score > old_score
+    regressedCount: integer("regressed_count").default(0).notNull(), // new_score < old_score
+    sameCount: integer("same_count").default(0).notNull(),
+
+    // Pass rate: % of events with new_overall >= 4
+    passRateOld: doublePrecision("pass_rate_old"),
+    passRateNew: doublePrecision("pass_rate_new"),
+
+    // Per-event details
+    // [{ eventId, oldOutput, newOutput, oldScores, newScores, scoreDelta }]
+    results: jsonb("results").default([]).notNull(),
+
+    status: replayStatusEnum("status").default("queued").notNull(),
+    error: text("error"),
+    triggeredByUserId: uuid("triggered_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => ({
+    productCreatedIdx: index("replay_runs_product_created_idx").on(t.productId, t.createdAt),
+    statusIdx: index("replay_runs_status_idx").on(t.status),
+  }),
+)
+
 // ===== Alert rules + history =====
 
 export const alertRules = pgTable(

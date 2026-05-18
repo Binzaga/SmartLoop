@@ -9,9 +9,11 @@ import { adminRoutes } from "./routes/admin"
 import { judgeRoutes } from "./routes/judge"
 import { dashboardRoutes } from "./routes/dashboard"
 import { authRoutes } from "./routes/auth"
+import { replayRoutes } from "./routes/replay"
 import { startJudgeWorker } from "./workers/judge-worker"
 import { startClusterWorker } from "./workers/cluster-worker"
 import { startAlertWorker } from "./workers/alert-worker"
+import { startReplayWorker } from "./workers/replay-worker"
 
 const app = Fastify({
   logger: {
@@ -38,6 +40,7 @@ await app.register(authRoutes)
 await app.register(adminRoutes)
 await app.register(judgeRoutes)
 await app.register(dashboardRoutes)
+await app.register(replayRoutes)
 
 // Authenticated event ingestion
 await app.register(eventRoutes)
@@ -55,6 +58,9 @@ const start = async () => {
     }
     startClusterWorker(app.log)
     startAlertWorker(app.log)
+    if (config.DASHSCOPE_API_KEY) {
+      startReplayWorker(app.log)
+    }
   } catch (err) {
     app.log.error(err)
     process.exit(1)
