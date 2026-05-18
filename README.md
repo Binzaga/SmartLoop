@@ -157,7 +157,8 @@ smartloop/
     ├── SDK.md                    Node.js SDK guide
     ├── SECRETS.md                Secret management + rotation
     ├── ROADMAP.md                Product roadmap — done / WIP / future
-    └── OPEN_SOURCE_ROADMAP.md    6-month community + launch operations plan
+    ├── OPEN_SOURCE_ROADMAP.md    6-month community + launch operations plan
+    └── SHARE.md                  Internal-share pitch document (中文)
 ```
 
 ---
