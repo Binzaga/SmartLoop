@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useActionState } from "react"
 import { IconArrowRight } from "@/components/icons"
+import { authAction } from "@/app/login/actions"
 
 export function LoginForm({
   defaultMode = "login",
@@ -11,41 +12,7 @@ export function LoginForm({
   next?: string
 }) {
   const [mode, setMode] = useState<"login" | "signup">(defaultMode)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [name, setName] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-    try {
-      const endpoint = mode === "signup" ? "/auth/signup" : "/auth/login"
-      const body =
-        mode === "signup" ? { email, password, name: name || undefined } : { email, password }
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify(body),
-      })
-      const data = await res.json().catch(() => ({} as any))
-      if (!res.ok) {
-        setError(data.error ?? `Login failed (HTTP ${res.status})`)
-        setLoading(false)
-        return
-      }
-      // Hard navigation so the cookie that was just set is included in the
-      // server-side render of /dashboard. (router.push does a soft transition
-      // and the dashboard layout's getCurrentUser() may race the cookie.)
-      window.location.href = next ?? "/dashboard"
-    } catch (err) {
-      setError((err as Error).message ?? "Network error")
-      setLoading(false)
-    }
-  }
+  const [state, formAction, isPending] = useActionState(authAction, undefined)
 
   return (
     <div className="sl-card p-6">
@@ -74,12 +41,14 @@ export function LoginForm({
         </button>
       </div>
 
-      <form onSubmit={submit} className="space-y-4">
+      <form action={formAction} className="space-y-4">
+        <input type="hidden" name="mode" value={mode} />
+        {next && <input type="hidden" name="next" value={next} />}
+
         {mode === "signup" && (
           <Field
             label="Name (optional)"
-            value={name}
-            onChange={setName}
+            name="name"
             type="text"
             placeholder="Your name"
             autoComplete="name"
@@ -87,8 +56,7 @@ export function LoginForm({
         )}
         <Field
           label="Email"
-          value={email}
-          onChange={setEmail}
+          name="email"
           type="email"
           required
           placeholder="you@example.com"
@@ -96,8 +64,7 @@ export function LoginForm({
         />
         <Field
           label="Password"
-          value={password}
-          onChange={setPassword}
+          name="password"
           type="password"
           required
           placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
@@ -105,19 +72,19 @@ export function LoginForm({
           minLength={mode === "signup" ? 8 : undefined}
         />
 
-        {error && (
+        {state?.error && (
           <p className="rounded-md border border-red-500/30 bg-red-500/[0.05] px-3 py-2 text-xs text-red-300">
-            {error}
+            {state.error}
           </p>
         )}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={isPending}
           className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-accent-from to-accent-to text-sm font-medium text-bg-base transition disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
-          {!loading && <IconArrowRight size={14} />}
+          {isPending ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+          {!isPending && <IconArrowRight size={14} />}
         </button>
       </form>
     </div>
@@ -126,8 +93,7 @@ export function LoginForm({
 
 function Field({
   label,
-  value,
-  onChange,
+  name,
   type = "text",
   placeholder,
   required,
@@ -135,8 +101,7 @@ function Field({
   minLength,
 }: {
   label: string
-  value: string
-  onChange: (v: string) => void
+  name: string
   type?: string
   placeholder?: string
   required?: boolean
@@ -149,9 +114,8 @@ function Field({
         {label}
       </span>
       <input
+        name={name}
         type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
         autoComplete={autoComplete}
