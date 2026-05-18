@@ -158,7 +158,8 @@ smartloop/
     ├── SECRETS.md                Secret management + rotation
     ├── ROADMAP.md                Product roadmap — done / WIP / future
     ├── OPEN_SOURCE_ROADMAP.md    6-month community + launch operations plan
-    └── SHARE.md                  Internal-share pitch document (中文)
+    ├── SHARE.md                  Internal-share pitch document (中文)
+    └── SLIDES.md                 Team-share slide deck (Marp markdown · build with `bun run slides`)
 ```
 
 ---

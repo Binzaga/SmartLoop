@@ -13,9 +13,16 @@
     "db:up": "docker compose up -d postgres redis",
     "db:down": "docker compose down",
     "db:migrate": "bun run --filter @smartloop/api db:migrate",
-    "db:seed": "bun run --filter @smartloop/api db:seed"
+    "db:seed": "bun run --filter @smartloop/api db:seed",
+    "slides:build": "marp docs/SLIDES.md -o docs/dist/SLIDES.html --html=true --allow-local-files && marp docs/SLIDES.md -o docs/dist/SLIDES.pdf --pdf --allow-local-files",
+    "slides:pptx": "marp docs/SLIDES.md -o docs/dist/SLIDES.pptx --pptx --allow-local-files",
+    "slides:preview": "marp docs/SLIDES.md --server --allow-local-files",
+    "slides": "bash scripts/build-slides.sh"
   },
   "engines": {
     "bun": ">=1.3.0"
+  },
+  "devDependencies": {
+    "@marp-team/marp-cli": "^4.4.0"
   }
 }
